@@ -1,0 +1,52 @@
+# ──────────────────────────────────────────────
+# Cosmos Platform — Docker Build Exclusions
+# ──────────────────────────────────────────────
+# Prevents unnecessary files from entering the
+# Docker build context, reducing image size and
+# improving build speed.
+
+# Version control
+.git
+.gitignore
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+.venv
+venv
+ENV
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+
+# Testing artifacts
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation & frontend (not needed in backend image)
+docs
+frontend
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Misc
+*.md
+*.log

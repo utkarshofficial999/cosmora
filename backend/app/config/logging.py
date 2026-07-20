@@ -5,10 +5,9 @@ Sets up structured logging with configurable levels.
 
 import logging
 import sys
-from typing import Optional
 
 
-def setup_logging(log_level: Optional[str] = None) -> None:
+def setup_logging(log_level: str | None = None) -> None:
     """Configure the root logger for the application.
 
     Args:

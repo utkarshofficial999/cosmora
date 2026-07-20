@@ -5,7 +5,6 @@ Values are loaded from environment variables and .env files.
 """
 
 from functools import lru_cache
-from typing import List
 
 from pydantic import Field, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -33,13 +32,13 @@ class Settings(BaseSettings):
 
     # ── PostgreSQL ───────────────────────────
     postgres_user: str = "cosmos"
-    postgres_password: str = "changeme"
+    postgres_password: str
     postgres_db: str = "cosmos_db"
     postgres_host: str = "db"
     postgres_port: int = 5432
 
     # ── CORS ─────────────────────────────────
-    cors_origins: List[str] = Field(
+    cors_origins: list[str] = Field(
         default=["http://localhost:3000", "http://localhost:8000"]
     )
 

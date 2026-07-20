@@ -36,13 +36,13 @@ docker compose up --build
 
 This starts both the FastAPI application and PostgreSQL database. The API will be available at:
 
-| Resource       | URL                                  |
-|----------------|--------------------------------------|
-| API            | http://localhost:8000                 |
-| Swagger UI     | http://localhost:8000/docs            |
-| ReDoc          | http://localhost:8000/redoc           |
-| Health Check   | http://localhost:8000/health          |
-| OpenAPI JSON   | http://localhost:8000/openapi.json    |
+| Resource       | URL                                      |
+|----------------|------------------------------------------|
+| API            | http://localhost:8000                     |
+| Swagger UI     | http://localhost:8000/docs                |
+| ReDoc          | http://localhost:8000/redoc               |
+| Health Check   | http://localhost:8000/api/v1/health       |
+| OpenAPI JSON   | http://localhost:8000/openapi.json        |
 
 ### 3. Run Without Docker
 
