@@ -1,0 +1,45 @@
+# ──────────────────────────────────────────────
+# Cosmos Platform — Docker Compose
+# Single command: docker compose up --build
+# ──────────────────────────────────────────────
+
+services:
+  # ── FastAPI Application ────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cosmos-api
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── PostgreSQL Database ────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: cosmos-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cosmos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-cosmos_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - cosmos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cosmos} -d ${POSTGRES_DB:-cosmos_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  cosmos_pgdata:
+    driver: local
