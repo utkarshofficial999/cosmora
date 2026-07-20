@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . .
 
 # ── Non-Root User ────────────────────────────
-RUN adduser --disabled-password --no-create-home appuser
+RUN adduser --disabled-password --no-create-home --gecos "" appuser
 USER appuser
 
 EXPOSE 8000
