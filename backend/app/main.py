@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from app.api.router import api_router
 from app.config.settings import get_settings
 from app.config.logging import setup_logging
-from app.db.session import engine
+from app.database.session import engine
 from app.exceptions import register_exception_handlers
 from app.middleware.cors import add_cors_middleware
 

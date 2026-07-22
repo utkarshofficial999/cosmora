@@ -10,7 +10,9 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.config.settings import get_settings
-from app.db.base import Base
+from app.database.base import Base
+# Import all models so Base.metadata is populated for autogenerate
+import app.models  # noqa: F401
 
 # Alembic Config object
 config = context.config
@@ -39,6 +41,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -60,6 +63,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
+            compare_type=True,
         )
 
         with context.begin_transaction():
