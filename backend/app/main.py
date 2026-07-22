@@ -25,6 +25,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
     logger.info("Environment: %s", settings.app_env)
     logger.info("Database: %s", settings.postgres_host)
+
+    # Seed default roles on application startup
+    try:
+        from app.database.session import async_session_factory
+        from app.repositories.role import RoleRepository
+
+        async with async_session_factory() as session:
+            role_repo = RoleRepository(session)
+            await role_repo.seed_default_roles()
+            await session.commit()
+    except Exception:
+        logger.exception("Failed to seed default roles on startup")
+
     yield
     logger.info("Shutting down — disposing database engine")
     await engine.dispose()

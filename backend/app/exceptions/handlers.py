@@ -14,11 +14,28 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.exceptions.auth import AuthBaseException
+
 logger = logging.getLogger(__name__)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Register all global exception handlers on the application."""
+
+    @app.exception_handler(AuthBaseException)
+    async def auth_exception_handler(
+        request: Request,
+        exc: AuthBaseException,
+    ) -> JSONResponse:
+        """Handle domain authentication and authorization exceptions."""
+        headers = {}
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            headers["WWW-Authenticate"] = "Bearer"
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers=headers,
+        )
 
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(
@@ -47,7 +64,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             exc.errors(),
         )
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             content={
                 "detail": "Validation error",
                 "errors": [
