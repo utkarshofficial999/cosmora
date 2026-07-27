@@ -29,7 +29,7 @@ async def test_admin_dashboard_as_admin(client: AsyncClient) -> None:
 
     dashboard_resp = await client.get("/api/v1/admin/dashboard", headers=headers)
     assert dashboard_resp.status_code == 200
-    assert "Welcome" in dashboard_resp.json()["message"]
+    assert "total_users" in dashboard_resp.json()
 
 
 @pytest.mark.anyio

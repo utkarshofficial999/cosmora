@@ -27,6 +27,11 @@ oauth2_scheme = OAuth2PasswordBearer(
     description="JWT Bearer Authentication. Submit your credentials to /api/v1/auth/login to get tokens.",
 )
 
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login",
+    auto_error=False,
+)
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Yield an async database session, ensuring cleanup on exit."""
@@ -63,6 +68,19 @@ async def get_current_user(
         raise AuthenticationError("User account is inactive.")
 
     return user
+
+
+async def get_current_user_optional(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    """Optionally validate bearer token and retrieve authenticated user if present."""
+    if not token:
+        return None
+    try:
+        return await get_current_user(token=token, db=db)
+    except Exception:
+        return None
 
 
 def require_roles(

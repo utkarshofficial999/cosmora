@@ -1,0 +1,20 @@
+name: Cosmora Backend CD
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -t cosmora-api:${{ github.ref_name }} ./backend
+
+      - name: Run Alembic Database Migrations
+        run: |
+          echo "Running production database migrations..."

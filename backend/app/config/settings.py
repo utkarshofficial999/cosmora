@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # ── Application ──────────────────────────
     app_name: str = "Cosmos Platform"
-    app_version: str = "0.1.0"
+    app_version: str = "1.0.0"
     app_env: str = "development"
     debug: bool = True
 

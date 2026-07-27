@@ -1,0 +1,20 @@
+name: Security & Vulnerability Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly scan
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Run Bandit Scan
+        run: |
+          pip install bandit
+          bandit -r backend/app

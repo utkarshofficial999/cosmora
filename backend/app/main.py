@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.api.router import api_router
 from app.config.settings import get_settings
@@ -15,6 +16,8 @@ from app.config.logging import setup_logging
 from app.database.session import engine
 from app.exceptions import register_exception_handlers
 from app.middleware.cors import add_cors_middleware
+from app.middleware.request_timer import RequestTimerMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +61,12 @@ app = FastAPI(
 
 # ── Middleware ───────────────────────────────
 add_cors_middleware(app, settings)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestTimerMiddleware)
 
 # ── Exception Handlers ──────────────────────
 register_exception_handlers(app)
 
 # ── Routes ───────────────────────────────────
 app.include_router(api_router)
-
