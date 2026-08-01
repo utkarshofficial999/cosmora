@@ -4,8 +4,13 @@ import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Rocket, Layers, Sparkles, ShieldCheck } from "lucide-react";
-import { MoonCanvas } from "@/components/solar-system/3d/MoonCanvas";
+import dynamic from "next/dynamic";
 import { MOCK_MOONS } from "@/mocks/solar-system/moons";
+
+const MoonCanvas = dynamic(
+  () => import("@/components/solar-system/3d/MoonCanvas").then((m) => m.MoonCanvas),
+  { ssr: false }
+);
 
 interface MoonPageProps {
   params: Promise<{ slug: string }>;

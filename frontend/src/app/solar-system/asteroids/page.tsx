@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowLeft, Search, ShieldAlert, ShieldCheck, Orbit, Zap, DollarSign } from "lucide-react";
-import { AsteroidCanvas } from "@/components/solar-system/3d/AsteroidCanvas";
 import { MOCK_ASTEROIDS } from "@/mocks/solar-system/asteroids";
+
+const AsteroidCanvas = dynamic(
+  () => import("@/components/solar-system/3d/AsteroidCanvas").then((m) => m.AsteroidCanvas),
+  { ssr: false }
+);
 
 export default function AsteroidsPage() {
   const [filterHazard, setFilterHazard] = useState<boolean | null>(null);

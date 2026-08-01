@@ -17,9 +17,14 @@ import {
   Compass,
   ArrowRight,
 } from "lucide-react";
-import { PlanetCanvas } from "@/components/solar-system/3d/PlanetCanvas";
+import dynamic from "next/dynamic";
 import { MOCK_PLANETS } from "@/mocks/solar-system/planets";
 import { MOCK_MOONS } from "@/mocks/solar-system/moons";
+
+const PlanetCanvas = dynamic(
+  () => import("@/components/solar-system/3d/PlanetCanvas").then((m) => m.PlanetCanvas),
+  { ssr: false }
+);
 
 interface PlanetPageProps {
   params: Promise<{ slug: string }>;

@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowLeft, Clock, Radio, Compass, Rocket } from "lucide-react";
-import { SpaceMapCanvas } from "@/components/solar-system/3d/SpaceMapCanvas";
 import { MOCK_SPACECRAFT } from "@/mocks/solar-system/space-map";
+
+const SpaceMapCanvas = dynamic(
+  () => import("@/components/solar-system/3d/SpaceMapCanvas").then((m) => m.SpaceMapCanvas),
+  { ssr: false }
+);
 
 export default function SpaceMapPage() {
   const [timeOffsetYears, setTimeOffsetYears] = useState(0);
