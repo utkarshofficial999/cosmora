@@ -641,7 +641,7 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       pMat.roughnessMap = textures.specular;
     }
 
-    // ─── NASA Satellite Texture Loader Override ───
+    // ─── NASA Satellite Texture & Real Cloud Loader Override ───
     const textureLoader = new THREE.TextureLoader();
 
     if (planet.slug === "earth") {
@@ -651,37 +651,40 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
 
       const realNormalMap = textureLoader.load("/textures/planets/earth_normal_2048.jpg");
       pMat.normalMap = realNormalMap;
-      pMat.normalScale = new THREE.Vector2(0.85, 0.85);
+      pMat.normalScale = new THREE.Vector2(0.65, 0.65);
 
       const realSpecMap = textureLoader.load("/textures/planets/earth_specular_2048.jpg");
       pMat.roughnessMap = realSpecMap;
       pMat.roughness = 0.35;
-      pMat.metalness = 0.1;
+      pMat.metalness = 0.05;
     }
 
     const pMesh = new THREE.Mesh(pGeo, pMat);
     planetGroup.add(pMesh);
 
-    // ─── Crisp Cloud Layer (Earth) ───
+    // ─── Real NASA Satellite Cloud Layer (Earth) ───
     let cloudMesh: THREE.Mesh | undefined;
-    if (textures.clouds) {
-      const cloudGeo = new THREE.SphereGeometry(radius * 1.012, 96, 96);
+    if (planet.slug === "earth") {
+      const realCloudMap = textureLoader.load("/textures/planets/earth_clouds_2048.jpg");
+      realCloudMap.colorSpace = THREE.SRGBColorSpace;
+      const cloudGeo = new THREE.SphereGeometry(radius * 1.015, 96, 96);
       const cloudMat = new THREE.MeshStandardMaterial({
-        map: textures.clouds,
+        map: realCloudMap,
         transparent: true,
-        opacity: 0.65,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
       planetGroup.add(cloudMesh);
     }
 
-    // ─── Atmosphere Glow Shell ───
-    const atmoGeo = new THREE.SphereGeometry(radius * 1.04, 64, 64);
+    // ─── Realistic Atmospheric Rayleigh Glow Shell ───
+    const atmoGeo = new THREE.SphereGeometry(radius * 1.022, 64, 64);
     const atmoMat = new THREE.MeshBasicMaterial({
-      color: hexColor,
+      color: planet.slug === "earth" ? 0x00d5ff : hexColor,
       transparent: true,
-      opacity: planet.slug === "mercury" ? 0.04 : 0.2,
+      opacity: planet.slug === "earth" ? 0.12 : planet.slug === "mercury" ? 0.04 : 0.18,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
     });
