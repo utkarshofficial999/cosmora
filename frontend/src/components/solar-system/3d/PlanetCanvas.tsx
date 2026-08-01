@@ -10,391 +10,565 @@ interface PlanetCanvasProps {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   4K PROCEDURAL TEXTURE GENERATORS  —  one per planet
+   HIGH-DEFINITION PROCEDURAL TEXTURE GENERATORS (2048x1024)
+   Crisp landmass coastlines, biomes, bump maps, and cloud systems
    ════════════════════════════════════════════════════════════════ */
 
-// Seeded pseudo-random for deterministic textures
-function seededRandom(seed: number) {
+// Seeded PRNG for deterministic procedural textures
+function seededPRNG(seed: number) {
   let s = seed;
-  return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; };
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
 }
 
-/* ── Mercury ── */
-function makeMercuryTexture(w = 2048, h = 1024): THREE.CanvasTexture {
-  const c = document.createElement("canvas"); c.width = w; c.height = h;
-  const x = c.getContext("2d")!;
-  // Base grey-brown surface
-  const g = x.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, "#8d8680"); g.addColorStop(0.5, "#a09890"); g.addColorStop(1, "#7a7268");
-  x.fillStyle = g; x.fillRect(0, 0, w, h);
-  // Surface variation
-  const rng = seededRandom(42);
-  for (let i = 0; i < 3000; i++) {
-    const px = rng() * w, py = rng() * h, r = 1 + rng() * 6;
-    const v = 60 + rng() * 80;
-    x.fillStyle = `rgba(${v},${v - 5},${v - 10},${(0.15 + rng() * 0.2).toFixed(2)})`;
-    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+/* ── Smooth Organic Blob Helper for Coastlines ── */
+function drawOrganicBlob(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  radiusX: number,
+  radiusY: number,
+  points: number,
+  roughness: number,
+  rng: () => number
+) {
+  ctx.beginPath();
+  const angleStep = (Math.PI * 2) / points;
+  const radii: number[] = [];
+  for (let i = 0; i < points; i++) {
+    radii.push(1 + (rng() - 0.5) * roughness);
   }
-  // Craters
-  for (let i = 0; i < 600; i++) {
-    const px = rng() * w, py = rng() * h, r = 3 + rng() * 28;
-    // shadow
-    x.fillStyle = `rgba(40,35,30,${(0.2 + rng() * 0.3).toFixed(2)})`;
-    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
-    // inner floor
-    x.fillStyle = `rgba(${100 + rng() * 40|0},${90 + rng() * 35|0},${80 + rng() * 30|0},${(0.4 + rng() * 0.3).toFixed(2)})`;
-    x.beginPath(); x.arc(px, py, r * 0.7, 0, Math.PI * 2); x.fill();
-    // rim highlight
-    x.strokeStyle = `rgba(190,180,170,${(0.15 + rng() * 0.2).toFixed(2)})`;
-    x.lineWidth = 1.5; x.beginPath(); x.arc(px - 1, py - 1, r, -0.8, 1.2); x.stroke();
+  for (let i = 0; i <= points; i++) {
+    const idx = i % points;
+    const angle = i * angleStep;
+    const rX = radiusX * radii[idx];
+    const rY = radiusY * radii[idx];
+    const x = centerX + Math.cos(angle) * rX;
+    const y = centerY + Math.sin(angle) * rY;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   }
-  // Caloris Basin
-  const rg = x.createRadialGradient(w * 0.3, h * 0.35, 10, w * 0.3, h * 0.35, 80);
-  rg.addColorStop(0, "rgba(130,120,100,0.5)"); rg.addColorStop(1, "rgba(100,90,75,0)");
-  x.fillStyle = rg; x.beginPath(); x.arc(w * 0.3, h * 0.35, 80, 0, Math.PI * 2); x.fill();
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  ctx.closePath();
 }
 
-function makeMercuryBump(w = 2048, h = 1024): THREE.CanvasTexture {
+/* ─────────────────────────────────────────────────────────────
+   1. EARTH: CRISP CONTINENTS, COASTAL SHELVES, BIOMES & BUMP
+   ───────────────────────────────────────────────────────────── */
+function makeEarthTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
-  x.fillStyle = "#808080"; x.fillRect(0, 0, w, h);
-  const rng = seededRandom(42);
-  for (let i = 0; i < 600; i++) {
-    const px = rng() * w, py = rng() * h, r = 3 + rng() * 28;
-    x.fillStyle = `rgba(40,40,40,${(0.3 + rng() * 0.3).toFixed(2)})`;
-    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
-    x.fillStyle = `rgba(160,160,160,${(0.2 + rng() * 0.2).toFixed(2)})`;
-    x.beginPath(); x.arc(px - 2, py - 2, r * 0.4, 0, Math.PI * 2); x.fill();
+
+  // 1. Deep Ocean Base
+  const og = x.createLinearGradient(0, 0, 0, h);
+  og.addColorStop(0, "#051329");
+  og.addColorStop(0.2, "#082142");
+  og.addColorStop(0.5, "#0b2e5c");
+  og.addColorStop(0.8, "#082142");
+  og.addColorStop(1, "#051329");
+  x.fillStyle = og;
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(1001);
+
+  // 2. Continental Definitions & Coastlines
+  const landmasses = [
+    // Eurasia
+    { cx: 0.38, cy: 0.28, rx: 0.18, ry: 0.12, col: "#2d6a4f", shelf: "#1a708a" },
+    { cx: 0.48, cy: 0.25, rx: 0.14, ry: 0.1, col: "#387d59", shelf: "#1b7894" },
+    { cx: 0.28, cy: 0.24, rx: 0.07, ry: 0.06, col: "#40916c", shelf: "#1e82a0" }, // Europe
+    // Africa
+    { cx: 0.25, cy: 0.52, rx: 0.09, ry: 0.14, col: "#688d40", shelf: "#1b7894" },
+    // North America
+    { cx: 0.78, cy: 0.26, rx: 0.13, ry: 0.1, col: "#2d6a4f", shelf: "#1a708a" },
+    // South America
+    { cx: 0.73, cy: 0.62, rx: 0.07, ry: 0.13, col: "#1b4332", shelf: "#18667e" },
+    // Australia
+    { cx: 0.58, cy: 0.72, rx: 0.07, ry: 0.06, col: "#aa8245", shelf: "#2294b5" },
+    // Greenland
+    { cx: 0.84, cy: 0.12, rx: 0.05, ry: 0.04, col: "#dce7eb", shelf: "#2ca5c8" },
+    // Antarctica & Arctic
+    { cx: 0.5, cy: 0.95, rx: 0.48, ry: 0.07, col: "#f0f4f8", shelf: "#3bb8dc" },
+    { cx: 0.5, cy: 0.03, rx: 0.45, ry: 0.04, col: "#e6eef2", shelf: "#30aed2" },
+  ];
+
+  // Draw Shallow Water Coastal Shelves first
+  for (const lm of landmasses) {
+    x.fillStyle = lm.shelf;
+    x.globalAlpha = 0.5;
+    drawOrganicBlob(x, lm.cx * w, lm.cy * h, lm.rx * w * 1.15, lm.ry * h * 1.15, 24, 0.3, rng);
+    x.fill();
+  }
+
+  // Draw Solid Landmasses
+  for (const lm of landmasses) {
+    x.fillStyle = lm.col;
+    x.globalAlpha = 1.0;
+    drawOrganicBlob(x, lm.cx * w, lm.cy * h, lm.rx * w, lm.ry * h, 28, 0.35, rng);
+    x.fill();
+
+    // Inner terrain variations (Forests, Tundra, Mountains)
+    for (let i = 0; i < 15; i++) {
+      const px = (lm.cx + (rng() - 0.5) * lm.rx * 1.4) * w;
+      const py = (lm.cy + (rng() - 0.5) * lm.ry * 1.4) * h;
+      const prx = lm.rx * w * (0.15 + rng() * 0.2);
+      const pry = lm.ry * h * (0.15 + rng() * 0.2);
+      x.fillStyle = rng() > 0.5 ? "#1b4332" : "#52b788";
+      x.globalAlpha = 0.6;
+      drawOrganicBlob(x, px, py, prx, pry, 16, 0.4, rng);
+      x.fill();
+    }
+  }
+
+  // Desert Belts (Sahara, Arabian, Australian Outback)
+  const deserts = [
+    { cx: 0.24, cy: 0.42, rx: 0.07, ry: 0.04, col: "#d4a359" }, // Sahara
+    { cx: 0.33, cy: 0.4, rx: 0.04, ry: 0.03, col: "#c99447" },  // Arabian
+    { cx: 0.58, cy: 0.72, rx: 0.05, ry: 0.04, col: "#c27c38" }, // Outback
+  ];
+  for (const d of deserts) {
+    x.fillStyle = d.col;
+    x.globalAlpha = 0.85;
+    drawOrganicBlob(x, d.cx * w, d.cy * h, d.rx * w, d.ry * h, 18, 0.3, rng);
+    x.fill();
+  }
+
+  // Mountain Ranges (Himalayas, Andes, Rockies)
+  x.strokeStyle = "rgba(40, 30, 20, 0.4)";
+  x.lineWidth = 4;
+  x.globalAlpha = 0.7;
+  // Himalayas
+  x.beginPath(); x.moveTo(w * 0.34, h * 0.32); x.lineTo(w * 0.42, h * 0.34); x.stroke();
+  // Andes
+  x.beginPath(); x.moveTo(w * 0.69, h * 0.52); x.lineTo(w * 0.67, h * 0.78); x.stroke();
+  // Rockies
+  x.beginPath(); x.moveTo(w * 0.73, h * 0.2); x.lineTo(w * 0.75, h * 0.35); x.stroke();
+
+  x.globalAlpha = 1.0;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* ── Earth Specular Map (Ocean Reflective, Land Matte) ── */
+function makeEarthSpecularMap(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+  // Bright white oceans = specular shine
+  x.fillStyle = "#ffffff";
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(1001);
+  const landmasses = [
+    { cx: 0.38, cy: 0.28, rx: 0.18, ry: 0.12 },
+    { cx: 0.48, cy: 0.25, rx: 0.14, ry: 0.1 },
+    { cx: 0.28, cy: 0.24, rx: 0.07, ry: 0.06 },
+    { cx: 0.25, cy: 0.52, rx: 0.09, ry: 0.14 },
+    { cx: 0.78, cy: 0.26, rx: 0.13, ry: 0.1 },
+    { cx: 0.73, cy: 0.62, rx: 0.07, ry: 0.13 },
+    { cx: 0.58, cy: 0.72, rx: 0.07, ry: 0.06 },
+    { cx: 0.84, cy: 0.12, rx: 0.05, ry: 0.04 },
+    { cx: 0.5, cy: 0.95, rx: 0.48, ry: 0.07 },
+    { cx: 0.5, cy: 0.03, rx: 0.45, ry: 0.04 },
+  ];
+  // Dark land = non-reflective matte
+  x.fillStyle = "#111111";
+  for (const lm of landmasses) {
+    drawOrganicBlob(x, lm.cx * w, lm.cy * h, lm.rx * w, lm.ry * h, 28, 0.35, rng);
+    x.fill();
   }
   return new THREE.CanvasTexture(c);
 }
 
-/* ── Venus ── */
-function makeVenusTexture(w = 2048, h = 1024): THREE.CanvasTexture {
-  const c = document.createElement("canvas"); c.width = w; c.height = h;
-  const x = c.getContext("2d")!;
-  const g = x.createLinearGradient(0, 0, w, h);
-  g.addColorStop(0, "#e8c96c"); g.addColorStop(0.3, "#d4a84b"); g.addColorStop(0.6, "#c4923a"); g.addColorStop(1, "#b8862f");
-  x.fillStyle = g; x.fillRect(0, 0, w, h);
-  // Cloud bands
-  const rng = seededRandom(99);
-  for (let y = 0; y < h; y += 4) {
-    const offset = Math.sin(y * 0.012 + rng() * 10) * 40;
-    x.fillStyle = `rgba(${210 + (y % 30)},${175 + (y % 25)},${100 + (y % 20)},0.25)`;
-    x.fillRect(offset, y, w, 3 + Math.sin(y * 0.04) * 3);
-  }
-  // Swirling vortices
-  for (let i = 0; i < 400; i++) {
-    const px = rng() * w, py = rng() * h;
-    const rw = 20 + rng() * 80, rh = 4 + rng() * 12;
-    x.fillStyle = `rgba(${230 + rng() * 25|0},${200 + rng() * 30|0},${130 + rng() * 40|0},${(0.06 + rng() * 0.12).toFixed(2)})`;
-    x.beginPath(); x.ellipse(px, py, rw, rh, rng() * Math.PI, 0, Math.PI * 2); x.fill();
-  }
-  // Polar brightening
-  x.fillStyle = "rgba(255,240,200,0.15)"; x.fillRect(0, 0, w, 60); x.fillRect(0, h - 60, w, 60);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
-
-/* ── Earth ── */
-function makeEarthTexture(w = 2048, h = 1024): THREE.CanvasTexture {
-  const c = document.createElement("canvas"); c.width = w; c.height = h;
-  const x = c.getContext("2d")!;
-  // Deep ocean
-  const og = x.createLinearGradient(0, 0, 0, h);
-  og.addColorStop(0, "#071e3d"); og.addColorStop(0.15, "#0a3057"); og.addColorStop(0.4, "#0d4170");
-  og.addColorStop(0.6, "#0d4170"); og.addColorStop(0.85, "#0a3057"); og.addColorStop(1, "#071e3d");
-  x.fillStyle = og; x.fillRect(0, 0, w, h);
-  // Ocean depth variation
-  const rng = seededRandom(777);
-  for (let i = 0; i < 1000; i++) {
-    x.fillStyle = `rgba(${8 + rng() * 20|0},${40 + rng() * 40|0},${80 + rng() * 40|0},0.15)`;
-    x.beginPath(); x.ellipse(rng() * w, rng() * h, 20 + rng() * 60, 10 + rng() * 30, rng() * Math.PI, 0, Math.PI * 2); x.fill();
-  }
-  // Continents
-  const continents: { cx: number; cy: number; r: number; col: string; patches: number }[] = [
-    { cx: 0.22, cy: 0.2, r: 0.07, col: "#2d6a4f", patches: 35 },   // Europe
-    { cx: 0.22, cy: 0.38, r: 0.1, col: "#1b4332", patches: 50 },    // Africa
-    { cx: 0.32, cy: 0.35, r: 0.05, col: "#40916c", patches: 25 },   // Middle East
-    { cx: 0.38, cy: 0.38, r: 0.06, col: "#52b788", patches: 30 },   // India
-    { cx: 0.45, cy: 0.3, r: 0.08, col: "#2d6a4f", patches: 40 },    // China/Asia
-    { cx: 0.5, cy: 0.38, r: 0.04, col: "#40916c", patches: 20 },    // SE Asia
-    { cx: 0.58, cy: 0.72, r: 0.06, col: "#95734a", patches: 25 },   // Australia
-    { cx: 0.75, cy: 0.25, r: 0.12, col: "#2d6a4f", patches: 55 },   // N America
-    { cx: 0.72, cy: 0.5, r: 0.08, col: "#40916c", patches: 40 },    // C America
-    { cx: 0.7, cy: 0.6, r: 0.09, col: "#1b4332", patches: 45 },     // S America
-    { cx: 0.12, cy: 0.25, r: 0.04, col: "#52b788", patches: 15 },   // UK
-    { cx: 0.5, cy: 0.93, r: 0.14, col: "#e8e4de", patches: 45 },    // Antarctica
-    { cx: 0.3, cy: 0.05, r: 0.08, col: "#d4cfc8", patches: 30 },    // Arctic
-  ];
-  for (const ct of continents) {
-    const cx = ct.cx * w, cy = ct.cy * h, cr = ct.r * w;
-    for (let i = 0; i < ct.patches; i++) {
-      const angle = rng() * Math.PI * 2;
-      const dist = rng() * cr;
-      const px = cx + Math.cos(angle) * dist;
-      const py = cy + Math.sin(angle) * dist * 0.7;
-      const pr = cr * 0.15 + rng() * cr * 0.25;
-      x.fillStyle = ct.col; x.globalAlpha = 0.55 + rng() * 0.45;
-      x.beginPath(); x.arc(px, py, pr, 0, Math.PI * 2); x.fill();
-    }
-    // Darker terrain detail
-    for (let i = 0; i < ct.patches * 0.4; i++) {
-      const px = cx + (rng() - 0.5) * cr * 1.5;
-      const py = cy + (rng() - 0.5) * cr;
-      x.fillStyle = `rgba(20,60,30,0.2)`; x.globalAlpha = 0.3 + rng() * 0.3;
-      x.beginPath(); x.arc(px, py, 3 + rng() * 12, 0, Math.PI * 2); x.fill();
-    }
-  }
-  x.globalAlpha = 1;
-  // Desert regions
-  const deserts = [
-    { cx: 0.2, cy: 0.35, r: 0.04 }, // Sahara
-    { cx: 0.35, cy: 0.35, r: 0.03 }, // Arabian
-    { cx: 0.55, cy: 0.7, r: 0.025 }, // Aussie outback
-  ];
-  for (const d of deserts) {
-    for (let i = 0; i < 15; i++) {
-      x.fillStyle = `rgba(${180 + rng() * 40|0},${150 + rng() * 30|0},${90 + rng() * 30|0},0.4)`;
-      x.beginPath(); x.arc(d.cx * w + (rng() - 0.5) * d.r * w, d.cy * h + (rng() - 0.5) * d.r * h * 0.7, 5 + rng() * 15, 0, Math.PI * 2); x.fill();
-    }
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
-
+/* ── Earth Crisp Cloud System (Smooth Weather Swirls, No Blob Rings) ── */
 function makeEarthClouds(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
   x.clearRect(0, 0, w, h);
-  const rng = seededRandom(333);
-  // Cloud bands
-  for (let i = 0; i < 500; i++) {
-    const px = rng() * w, py = rng() * h;
-    const rw = 30 + rng() * 120, rh = 8 + rng() * 25;
-    x.fillStyle = `rgba(255,255,255,${(0.08 + rng() * 0.2).toFixed(2)})`;
-    x.beginPath(); x.ellipse(px, py, rw, rh, rng() * 0.5, 0, Math.PI * 2); x.fill();
+
+  const rng = seededPRNG(3003);
+
+  // Smooth continuous cloud bands
+  for (let b = 0; b < 12; b++) {
+    const cy = (0.15 + (b / 12) * 0.7) * h;
+    const bandHeight = 25 + rng() * 40;
+
+    x.beginPath();
+    x.moveTo(0, cy);
+    for (let px = 0; px <= w; px += 40) {
+      const py = cy + Math.sin(px * 0.008 + b * 1.5) * 35 + (rng() - 0.5) * 15;
+      x.lineTo(px, py);
+    }
+    x.strokeStyle = `rgba(255, 255, 255, ${(0.25 + rng() * 0.35).toFixed(2)})`;
+    x.lineWidth = bandHeight;
+    x.lineCap = "round";
+    x.stroke();
   }
-  // ITCZ cloud belt near equator
-  for (let i = 0; i < 80; i++) {
-    x.fillStyle = `rgba(255,255,255,${(0.1 + rng() * 0.15).toFixed(2)})`;
-    x.beginPath(); x.ellipse(rng() * w, h * 0.48 + (rng() - 0.5) * 60, 40 + rng() * 100, 10 + rng() * 20, rng() * 0.3, 0, Math.PI * 2); x.fill();
-  }
-  // Cyclone spirals
-  for (let s = 0; s < 5; s++) {
-    const sx = rng() * w, sy = h * 0.3 + rng() * h * 0.4;
-    for (let a = 0; a < 12; a++) {
-      const angle = a * 0.5 + rng() * 0.3;
-      const dist = 5 + a * 4;
-      x.fillStyle = `rgba(255,255,255,${(0.12 - a * 0.008).toFixed(2)})`;
-      x.beginPath(); x.arc(sx + Math.cos(angle) * dist, sy + Math.sin(angle) * dist, 6 + rng() * 10, 0, Math.PI * 2); x.fill();
+
+  // Cyclonic Storm Swirls
+  const storms = [
+    { cx: 0.3, cy: 0.35, r: 80 },
+    { cx: 0.75, cy: 0.3, r: 95 },
+    { cx: 0.5, cy: 0.65, r: 70 },
+  ];
+  for (const st of storms) {
+    const sx = st.cx * w, sy = st.cy * h;
+    x.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    x.lineWidth = 8;
+    for (let a = 0; a < 8; a++) {
+      const angle = a * 0.8;
+      const r = st.r * (0.2 + a * 0.1);
+      x.beginPath();
+      x.arc(sx, sy, r, angle, angle + 1.8);
+      x.stroke();
     }
   }
+
   return new THREE.CanvasTexture(c);
 }
 
-/* ── Mars ── */
+/* ── Earth Topography Bump Map ── */
+function makeEarthBump(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#808080";
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(1001);
+  const landmasses = [
+    { cx: 0.38, cy: 0.28, rx: 0.18, ry: 0.12 },
+    { cx: 0.48, cy: 0.25, rx: 0.14, ry: 0.1 },
+    { cx: 0.28, cy: 0.24, rx: 0.07, ry: 0.06 },
+    { cx: 0.25, cy: 0.52, rx: 0.09, ry: 0.14 },
+    { cx: 0.78, cy: 0.26, rx: 0.13, ry: 0.1 },
+    { cx: 0.73, cy: 0.62, rx: 0.07, ry: 0.13 },
+    { cx: 0.58, cy: 0.72, rx: 0.07, ry: 0.06 },
+  ];
+
+  x.fillStyle = "#b0b0b0";
+  for (const lm of landmasses) {
+    drawOrganicBlob(x, lm.cx * w, lm.cy * h, lm.rx * w, lm.ry * h, 28, 0.35, rng);
+    x.fill();
+  }
+  // Mountain Ridge Highs
+  x.strokeStyle = "#ffffff";
+  x.lineWidth = 6;
+  x.beginPath(); x.moveTo(w * 0.34, h * 0.32); x.lineTo(w * 0.42, h * 0.34); x.stroke();
+  x.beginPath(); x.moveTo(w * 0.69, h * 0.52); x.lineTo(w * 0.67, h * 0.78); x.stroke();
+  x.beginPath(); x.moveTo(w * 0.73, h * 0.2); x.lineTo(w * 0.75, h * 0.35); x.stroke();
+
+  return new THREE.CanvasTexture(c);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2. MARS: VALLES MARINERIS, OLYMPUS MONS, POLAR CAPS & BASALTS
+   ───────────────────────────────────────────────────────────── */
 function makeMarsTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
+
+  // Base Red Regolith
   const g = x.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, "#a0522d"); g.addColorStop(0.15, "#b8602f"); g.addColorStop(0.5, "#c2410c");
-  g.addColorStop(0.85, "#b8602f"); g.addColorStop(1, "#a0522d");
-  x.fillStyle = g; x.fillRect(0, 0, w, h);
-  const rng = seededRandom(555);
-  // Terrain variation
-  for (let i = 0; i < 2000; i++) {
-    const v = 120 + rng() * 80;
-    x.fillStyle = `rgba(${v|0},${v * 0.45|0},${v * 0.2|0},${(0.1 + rng() * 0.15).toFixed(2)})`;
-    x.beginPath(); x.arc(rng() * w, rng() * h, 3 + rng() * 15, 0, Math.PI * 2); x.fill();
+  g.addColorStop(0, "#8a2f10");
+  g.addColorStop(0.2, "#b8471b");
+  g.addColorStop(0.5, "#cd5422");
+  g.addColorStop(0.8, "#b8471b");
+  g.addColorStop(1, "#8a2f10");
+  x.fillStyle = g;
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(5005);
+
+  // Dark Basaltic Maria Regions (Syrtis Major, Acidalia)
+  const maria = [
+    { cx: 0.45, cy: 0.52, rx: 0.12, ry: 0.14, col: "#3d1408" },
+    { cx: 0.68, cy: 0.38, rx: 0.15, ry: 0.12, col: "#48180a" },
+    { cx: 0.22, cy: 0.65, rx: 0.1, ry: 0.08, col: "#3b1206" },
+  ];
+  for (const m of maria) {
+    x.fillStyle = m.col;
+    x.globalAlpha = 0.8;
+    drawOrganicBlob(x, m.cx * w, m.cy * h, m.rx * w, m.ry * h, 22, 0.4, rng);
+    x.fill();
   }
-  // Dark volcanic highlands
-  const highlands = [{ cx: 0.4, cy: 0.55, r: 0.15 }, { cx: 0.7, cy: 0.4, r: 0.12 }];
-  for (const hl of highlands) {
-    for (let i = 0; i < 80; i++) {
-      x.fillStyle = `rgba(60,20,8,${(0.1 + rng() * 0.2).toFixed(2)})`;
-      x.beginPath(); x.arc(hl.cx * w + (rng() - 0.5) * hl.r * w, hl.cy * h + (rng() - 0.5) * hl.r * h, 5 + rng() * 25, 0, Math.PI * 2); x.fill();
-    }
-  }
-  // Valles Marineris
-  x.strokeStyle = "rgba(80,25,8,0.6)"; x.lineWidth = 6; x.lineCap = "round";
-  x.beginPath(); x.moveTo(w * 0.2, h * 0.5); x.bezierCurveTo(w * 0.35, h * 0.48, w * 0.5, h * 0.46, w * 0.65, h * 0.5); x.stroke();
-  x.strokeStyle = "rgba(60,18,5,0.4)"; x.lineWidth = 12;
-  x.beginPath(); x.moveTo(w * 0.2, h * 0.5); x.bezierCurveTo(w * 0.35, h * 0.48, w * 0.5, h * 0.46, w * 0.65, h * 0.5); x.stroke();
-  // Olympus Mons
-  const omx = w * 0.15, omy = h * 0.35;
-  const omg = x.createRadialGradient(omx, omy, 5, omx, omy, 50);
-  omg.addColorStop(0, "rgba(200,120,60,0.6)"); omg.addColorStop(0.5, "rgba(180,100,45,0.3)"); omg.addColorStop(1, "rgba(160,80,30,0)");
-  x.fillStyle = omg; x.beginPath(); x.arc(omx, omy, 50, 0, Math.PI * 2); x.fill();
-  // Caldera
-  x.fillStyle = "rgba(80,30,10,0.4)"; x.beginPath(); x.arc(omx, omy, 8, 0, Math.PI * 2); x.fill();
-  // Polar ice caps
-  for (const [py, ph] of [[0, 55], [h - 50, 50]] as [number, number][]) {
-    const pg = x.createLinearGradient(0, py, 0, py + ph);
-    pg.addColorStop(0, py === 0 ? "rgba(240,235,225,0.7)" : "rgba(240,235,225,0)");
-    pg.addColorStop(1, py === 0 ? "rgba(240,235,225,0)" : "rgba(240,235,225,0.65)");
-    x.fillStyle = pg; x.fillRect(0, py, w, ph);
-  }
-  // Craters
-  for (let i = 0; i < 120; i++) {
-    const px = rng() * w, py = rng() * h, r = 2 + rng() * 12;
-    x.fillStyle = `rgba(70,25,8,${(0.15 + rng() * 0.2).toFixed(2)})`;
-    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+
+  // Valles Marineris Canyon System
+  x.globalAlpha = 1.0;
+  x.strokeStyle = "#240a04";
+  x.lineWidth = 14;
+  x.lineCap = "round";
+  x.beginPath();
+  x.moveTo(w * 0.22, h * 0.48);
+  x.bezierCurveTo(w * 0.35, h * 0.46, w * 0.48, h * 0.44, w * 0.62, h * 0.48);
+  x.stroke();
+
+  x.strokeStyle = "#e86b36";
+  x.lineWidth = 3;
+  x.beginPath();
+  x.moveTo(w * 0.22, h * 0.47);
+  x.bezierCurveTo(w * 0.35, h * 0.45, w * 0.48, h * 0.43, w * 0.62, h * 0.47);
+  x.stroke();
+
+  // Olympus Mons Volcano Shield & Caldera
+  const omx = w * 0.16, omy = h * 0.36;
+  const omg = x.createRadialGradient(omx, omy, 4, omx, omy, 65);
+  omg.addColorStop(0, "#f0834e");
+  omg.addColorStop(0.4, "#b84f21");
+  omg.addColorStop(1, "rgba(138, 47, 16, 0)");
+  x.fillStyle = omg;
+  x.beginPath(); x.arc(omx, omy, 65, 0, Math.PI * 2); x.fill();
+  // Caldera Crater Rim
+  x.fillStyle = "#240a04";
+  x.beginPath(); x.arc(omx, omy, 10, 0, Math.PI * 2); x.fill();
+
+  // Crisp Polar Ice Caps
+  x.fillStyle = "#f5f2eb";
+  // North Pole Cap
+  x.beginPath();
+  x.ellipse(w * 0.5, h * 0.04, w * 0.4, h * 0.05, 0, 0, Math.PI * 2);
+  x.fill();
+  // South Pole Cap
+  x.beginPath();
+  x.ellipse(w * 0.5, h * 0.96, w * 0.35, h * 0.04, 0, 0, Math.PI * 2);
+  x.fill();
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
-/* ── Jupiter ── */
+function makeMarsBump(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#808080";
+  x.fillRect(0, 0, w, h);
+
+  // Valles Marineris Depth Trench
+  x.strokeStyle = "#101010";
+  x.lineWidth = 14;
+  x.beginPath();
+  x.moveTo(w * 0.22, h * 0.48);
+  x.bezierCurveTo(w * 0.35, h * 0.46, w * 0.48, h * 0.44, w * 0.62, h * 0.48);
+  x.stroke();
+
+  // Olympus Mons Elevation Peak
+  const omx = w * 0.16, omy = h * 0.36;
+  const omg = x.createRadialGradient(omx, omy, 2, omx, omy, 65);
+  omg.addColorStop(0, "#ffffff");
+  omg.addColorStop(1, "#808080");
+  x.fillStyle = omg;
+  x.beginPath(); x.arc(omx, omy, 65, 0, Math.PI * 2); x.fill();
+
+  return new THREE.CanvasTexture(c);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. JUPITER: CRISP ATMOSPHERIC BELTS & DETAILED GREAT RED SPOT
+   ───────────────────────────────────────────────────────────── */
 function makeJupiterTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
-  const bands = ["#f5deb3","#deb887","#cd853f","#d2691e","#f5deb3","#c17c3e","#a0522d","#e8c39e","#d4915a","#8b4513","#deb887","#c17c3e","#cd853f","#f5deb3","#a0522d","#d2691e"];
+
+  const bands = [
+    "#ebd4b5", "#ba7843", "#d89660", "#9e4e29", "#f2d6b3", "#c77c44",
+    "#7e361b", "#dfaa7c", "#c87d46", "#8a3a1f", "#e4b993", "#b96f3a"
+  ];
   const bh = h / bands.length;
+
   for (let i = 0; i < bands.length; i++) {
-    x.fillStyle = bands[i]; x.fillRect(0, i * bh, w, bh + 2);
+    x.fillStyle = bands[i];
+    x.fillRect(0, i * bh, w, bh + 2);
   }
-  const rng = seededRandom(123);
-  // Band edge turbulence
-  for (let i = 0; i < 4000; i++) {
-    const py = rng() * h;
-    const bandIdx = Math.floor(py / bh);
-    const nearEdge = Math.abs((py % bh) - bh / 2) > bh * 0.35;
-    if (!nearEdge && rng() > 0.3) continue;
-    x.fillStyle = `rgba(${140 + rng() * 115|0},${90 + rng() * 100|0},${40 + rng() * 80|0},${(0.08 + rng() * 0.12).toFixed(2)})`;
-    x.beginPath(); x.ellipse(rng() * w, py, 15 + rng() * 60, 2 + rng() * 6, rng() * 0.4, 0, Math.PI * 2); x.fill();
+
+  // Harmonic Wave Distortions on Band Edges
+  for (let i = 0; i < bands.length; i++) {
+    const yEdge = i * bh;
+    x.beginPath();
+    x.moveTo(0, yEdge);
+    for (let px = 0; px <= w; px += 20) {
+      const dy = Math.sin(px * 0.015 + i * 2.1) * 8 + Math.cos(px * 0.03) * 4;
+      x.lineTo(px, yEdge + dy);
+    }
+    x.lineTo(w, yEdge + bh);
+    x.lineTo(0, yEdge + bh);
+    x.closePath();
+    x.fillStyle = bands[(i + 1) % bands.length];
+    x.globalAlpha = 0.4;
+    x.fill();
   }
-  // Great Red Spot
-  const gx = w * 0.68, gy = h * 0.6;
-  // Outer swirl
-  for (let a = 0; a < 50; a++) {
-    const angle = a * 0.4 + rng() * 0.3;
-    const dist = 25 + a * 1.8;
-    x.fillStyle = `rgba(${180 + rng() * 40|0},${70 + rng() * 50|0},${20 + rng() * 30|0},${(0.15 - a * 0.002).toFixed(3)})`;
-    x.beginPath(); x.ellipse(gx + Math.cos(angle) * dist, gy + Math.sin(angle) * dist * 0.6, 10 + rng() * 20, 3 + rng() * 6, angle, 0, Math.PI * 2); x.fill();
+  x.globalAlpha = 1.0;
+
+  // Great Red Spot with Multi-layered Swirl Rings
+  const gx = w * 0.65, gy = h * 0.58;
+  const grsGrad = x.createRadialGradient(gx, gy, 4, gx, gy, 70);
+  grsGrad.addColorStop(0, "#cc2c16");
+  grsGrad.addColorStop(0.4, "#e05828");
+  grsGrad.addColorStop(0.8, "#d1855a");
+  grsGrad.addColorStop(1, "rgba(224, 88, 40, 0)");
+  x.fillStyle = grsGrad;
+  x.beginPath(); x.ellipse(gx, gy, 75, 42, 0, 0, Math.PI * 2); x.fill();
+
+  // Spiral Vortex Rings inside GRS
+  x.strokeStyle = "rgba(140, 25, 10, 0.6)";
+  x.lineWidth = 4;
+  for (let r = 12; r < 38; r += 8) {
+    x.beginPath();
+    x.ellipse(gx, gy, r * 1.6, r, 0.2, 0, Math.PI * 2);
+    x.stroke();
   }
-  // Core
-  const rg = x.createRadialGradient(gx, gy, 5, gx, gy, 55);
-  rg.addColorStop(0, "rgba(180,30,15,0.9)"); rg.addColorStop(0.4, "rgba(200,70,30,0.7)"); rg.addColorStop(1, "rgba(210,120,70,0.2)");
-  x.fillStyle = rg; x.beginPath(); x.ellipse(gx, gy, 60, 36, 0, 0, Math.PI * 2); x.fill();
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
-/* ── Saturn ── */
+/* ─────────────────────────────────────────────────────────────
+   4. SATURN: ATMOSPHERIC BELTS & CRISP RING SYSTEM
+   ───────────────────────────────────────────────────────────── */
 function makeSaturnTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
-  const bands = ["#f0e6c8","#e8d5a3","#d4b86a","#c9a84c","#e2c98a","#b8923a","#f0e0b0","#c9a84c","#d4b86a","#e8d5a3","#c9a84c","#b8923a"];
+
+  const bands = ["#f2e8cf", "#e3d1a4", "#d1b873", "#c7a858", "#dec283", "#b59241", "#ebdcae"];
   const bh = h / bands.length;
-  for (let i = 0; i < bands.length; i++) { x.fillStyle = bands[i]; x.fillRect(0, i * bh, w, bh + 2); }
-  const rng = seededRandom(456);
-  for (let i = 0; i < 2000; i++) {
-    x.fillStyle = `rgba(${200 + rng() * 55|0},${170 + rng() * 60|0},${100 + rng() * 55|0},${(0.05 + rng() * 0.1).toFixed(2)})`;
-    x.beginPath(); x.ellipse(rng() * w, rng() * h, 15 + rng() * 40, 2 + rng() * 5, rng() * 0.2, 0, Math.PI * 2); x.fill();
+  for (let i = 0; i < bands.length; i++) {
+    x.fillStyle = bands[i];
+    x.fillRect(0, i * bh, w, bh + 2);
   }
-  // Subtle north polar hexagon hint
-  x.strokeStyle = "rgba(180,160,120,0.12)"; x.lineWidth = 3;
-  x.beginPath(); for (let i = 0; i <= 6; i++) {
-    const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
-    const px = w * 0.5 + Math.cos(a) * 60, py = 50 + Math.sin(a) * 20;
-    i === 0 ? x.moveTo(px, py) : x.lineTo(px, py);
-  } x.stroke();
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 function makeSaturnRingTexture(): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = 2048; c.height = 64;
   const x = c.getContext("2d")!;
-  const bands = [
-    [0, 0.03, "rgba(180,160,120,0)"], [0.03, 0.08, "rgba(200,180,140,0.4)"],
-    [0.08, 0.15, "rgba(190,170,130,0.7)"], [0.15, 0.22, "rgba(210,190,150,0.85)"],
-    [0.22, 0.28, "rgba(220,200,160,0.92)"], [0.28, 0.32, "rgba(160,140,100,0.3)"],
-    [0.32, 0.42, "rgba(200,185,145,0.88)"], [0.42, 0.55, "rgba(215,195,155,0.95)"],
-    [0.55, 0.62, "rgba(190,170,130,0.75)"], [0.62, 0.68, "rgba(170,150,110,0.5)"],
-    [0.68, 0.78, "rgba(205,185,145,0.82)"], [0.78, 0.88, "rgba(185,165,125,0.6)"],
-    [0.88, 0.95, "rgba(160,140,100,0.25)"], [0.95, 1.0, "rgba(140,120,90,0)"],
+  const ringBands = [
+    { start: 0.0, end: 0.05, col: "rgba(0,0,0,0)" },
+    { start: 0.05, end: 0.22, col: "rgba(180, 160, 120, 0.6)" },
+    { start: 0.22, end: 0.26, col: "rgba(0,0,0,0.15)" }, // Cassini Division
+    { start: 0.26, end: 0.65, col: "rgba(215, 195, 150, 0.95)" },
+    { start: 0.65, end: 0.88, col: "rgba(195, 175, 130, 0.75)" },
+    { start: 0.88, end: 1.0, col: "rgba(0,0,0,0)" },
   ];
-  for (const [start, end, col] of bands) {
-    x.fillStyle = col as string;
-    x.fillRect((start as number) * 2048, 0, ((end as number) - (start as number)) * 2048 + 2, 64);
+  for (const rb of ringBands) {
+    x.fillStyle = rb.col;
+    x.fillRect(rb.start * 2048, 0, (rb.end - rb.start) * 2048 + 2, 64);
   }
-  // Fine ring detail
-  const rng = seededRandom(789);
-  for (let i = 0; i < 300; i++) {
-    const px = rng() * 2048;
-    x.fillStyle = `rgba(${160 + rng() * 60|0},${140 + rng() * 50|0},${100 + rng() * 40|0},${(0.05 + rng() * 0.1).toFixed(2)})`;
-    x.fillRect(px, 0, 1 + rng() * 3, 64);
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
-/* ── Uranus ── */
+/* ─────────────────────────────────────────────────────────────
+   5. MERCURY: CRATERS, CALORIS BASIN & BUMP MAP
+   ───────────────────────────────────────────────────────────── */
+function makeMercuryTexture(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#8a837c";
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(9009);
+
+  // Craters with crisp lighting rims
+  for (let i = 0; i < 450; i++) {
+    const px = rng() * w, py = rng() * h, r = 4 + rng() * 24;
+    // Crater Floor
+    x.fillStyle = "#5c5650";
+    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+    // Sunlit Rim
+    x.strokeStyle = "#cfc8c0";
+    x.lineWidth = 2;
+    x.beginPath(); x.arc(px - 1, py - 1, r, -1.2, 0.8); x.stroke();
+    // Shadow Rim
+    x.strokeStyle = "#38332e";
+    x.beginPath(); x.arc(px + 1, py + 1, r, 1.8, 3.8); x.stroke();
+  }
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeMercuryBump(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+  x.fillStyle = "#808080";
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(9009);
+  for (let i = 0; i < 450; i++) {
+    const px = rng() * w, py = rng() * h, r = 4 + rng() * 24;
+    x.fillStyle = "#303030";
+    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+    x.fillStyle = "#ffffff";
+    x.beginPath(); x.arc(px - 2, py - 2, r * 0.3, 0, Math.PI * 2); x.fill();
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. VENUS, URANUS, NEPTUNE
+   ───────────────────────────────────────────────────────────── */
+function makeVenusTexture(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+  const g = x.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, "#e8c96c"); g.addColorStop(0.5, "#d4a84b"); g.addColorStop(1, "#ba8932");
+  x.fillStyle = g; x.fillRect(0, 0, w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 function makeUranusTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
   const g = x.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, "#7dd3c0"); g.addColorStop(0.25, "#5eead4"); g.addColorStop(0.5, "#2dd4bf");
-  g.addColorStop(0.75, "#5eead4"); g.addColorStop(1, "#7dd3c0");
+  g.addColorStop(0, "#7dd3c0"); g.addColorStop(0.5, "#2dd4bf"); g.addColorStop(1, "#7dd3c0");
   x.fillStyle = g; x.fillRect(0, 0, w, h);
-  const rng = seededRandom(111);
-  for (let y = 0; y < h; y += 4) {
-    x.fillStyle = `rgba(${90 + (y % 35)},${200 + (y % 25)},${190 + (y % 20)},0.12)`;
-    x.fillRect(0, y, w, 3);
-  }
-  for (let i = 0; i < 200; i++) {
-    x.fillStyle = `rgba(${100 + rng() * 60|0},${220 + rng() * 35|0},${210 + rng() * 30|0},0.06)`;
-    x.beginPath(); x.ellipse(rng() * w, rng() * h, 30 + rng() * 80, 5 + rng() * 12, rng() * 0.2, 0, Math.PI * 2); x.fill();
-  }
-  // Polar brightening
-  x.fillStyle = "rgba(200,250,245,0.12)"; x.fillRect(0, 0, w, 80); x.fillRect(0, h - 80, w, 80);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
-/* ── Neptune ── */
 function makeNeptuneTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
   const g = x.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, "#2d2b80"); g.addColorStop(0.3, "#3730a3"); g.addColorStop(0.5, "#4338ca");
-  g.addColorStop(0.7, "#3730a3"); g.addColorStop(1, "#2d2b80");
+  g.addColorStop(0, "#2d2b80"); g.addColorStop(0.5, "#4338ca"); g.addColorStop(1, "#2d2b80");
   x.fillStyle = g; x.fillRect(0, 0, w, h);
-  const rng = seededRandom(222);
-  for (let y = 0; y < h; y += 6) {
-    x.fillStyle = `rgba(${50 + (y % 40)},${45 + (y % 35)},${160 + (y % 40)},0.18)`;
-    x.fillRect(0, y, w, 4);
-  }
-  for (let i = 0; i < 300; i++) {
-    x.fillStyle = `rgba(${60 + rng() * 50|0},${55 + rng() * 45|0},${170 + rng() * 50|0},0.08)`;
-    x.beginPath(); x.ellipse(rng() * w, rng() * h, 20 + rng() * 70, 4 + rng() * 10, rng() * 0.3, 0, Math.PI * 2); x.fill();
-  }
   // Great Dark Spot
   const dx = w * 0.55, dy = h * 0.45;
   const dg = x.createRadialGradient(dx, dy, 5, dx, dy, 50);
-  dg.addColorStop(0, "rgba(15,12,60,0.7)"); dg.addColorStop(0.6, "rgba(25,20,80,0.4)"); dg.addColorStop(1, "rgba(40,35,100,0)");
-  x.fillStyle = dg; x.beginPath(); x.ellipse(dx, dy, 55, 30, -0.15, 0, Math.PI * 2); x.fill();
-  // White companion cloud
-  x.fillStyle = "rgba(200,220,255,0.3)";
-  x.beginPath(); x.ellipse(dx - 10, dy - 40, 40, 8, -0.1, 0, Math.PI * 2); x.fill();
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  dg.addColorStop(0, "rgba(15,12,60,0.8)"); dg.addColorStop(1, "rgba(40,35,100,0)");
+  x.fillStyle = dg; x.beginPath(); x.ellipse(dx, dy, 60, 32, -0.15, 0, Math.PI * 2); x.fill();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 /* ════════════════════════════════════════════════════════════════
-   TEXTURE MAP — slug → generators
+   TEXTURE DISPATCHER
    ════════════════════════════════════════════════════════════════ */
 function getTexturesForPlanet(slug: string) {
   switch (slug) {
     case "mercury": return { map: makeMercuryTexture(), bump: makeMercuryBump() };
     case "venus":   return { map: makeVenusTexture() };
-    case "earth":   return { map: makeEarthTexture(), clouds: makeEarthClouds() };
-    case "mars":    return { map: makeMarsTexture() };
+    case "earth":   return { map: makeEarthTexture(), bump: makeEarthBump(), specular: makeEarthSpecularMap(), clouds: makeEarthClouds() };
+    case "mars":    return { map: makeMarsTexture(), bump: makeMarsBump() };
     case "jupiter": return { map: makeJupiterTexture() };
     case "saturn":  return { map: makeSaturnTexture(), ring: makeSaturnRingTexture() };
     case "uranus":  return { map: makeUranusTexture() };
     case "neptune": return { map: makeNeptuneTexture() };
-    default:        return { map: makeEarthTexture() };
+    default:        return { map: makeEarthTexture(), bump: makeEarthBump(), specular: makeEarthSpecularMap(), clouds: makeEarthClouds() };
   }
 }
 
 /* ════════════════════════════════════════════════════════════════
-   MAIN COMPONENT
+   MAIN PLANET CANVAS RENDERER COMPONENT
    ════════════════════════════════════════════════════════════════ */
 export function PlanetCanvas({ planet }: PlanetCanvasProps) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -405,12 +579,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     const width = container.clientWidth;
     const height = container.clientHeight || 550;
 
-    // ─── Scene ───
+    // ─── Scene & Camera ───
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
     camera.position.set(0, 0.5, 7);
 
-    // ─── Renderer ───
+    // ─── WebGL Renderer ───
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -418,7 +592,7 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     renderer.toneMappingExposure = 1.4;
     container.appendChild(renderer.domElement);
 
-    // ─── OrbitControls ───
+    // ─── OrbitControls (Drag to rotate, Scroll to zoom) ───
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
@@ -430,13 +604,13 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.5;
 
-    // ─── Lighting ───
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const sunLight = new THREE.DirectionalLight(0xfff8f0, 3.0);
+    // ─── Lighting Setup ───
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const sunLight = new THREE.DirectionalLight(0xfff8f0, 3.2);
     sunLight.position.set(10, 6, 8);
     scene.add(sunLight);
 
-    const fillLight = new THREE.DirectionalLight(0x8888ff, 0.4);
+    const fillLight = new THREE.DirectionalLight(0x8888ff, 0.35);
     fillLight.position.set(-8, -4, -6);
     scene.add(fillLight);
 
@@ -445,10 +619,10 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     rimLight.position.set(-6, -3, -4);
     scene.add(rimLight);
 
-    // ─── Textures ───
+    // ─── Load Procedural Textures ───
     const textures = getTexturesForPlanet(planet.slug);
 
-    // ─── Planet ───
+    // ─── Planet Mesh Group ───
     const planetGroup = new THREE.Group();
     scene.add(planetGroup);
 
@@ -457,51 +631,48 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     const pMat = new THREE.MeshStandardMaterial({
       map: textures.map,
       bumpMap: textures.bump,
-      bumpScale: textures.bump ? 0.04 : 0,
-      roughness: planet.slug === "venus" ? 0.7 : 0.5,
+      bumpScale: textures.bump ? 0.05 : 0,
+      roughness: planet.slug === "earth" ? 0.45 : planet.slug === "venus" ? 0.7 : 0.55,
       metalness: 0.08,
     });
+
+    // Add specular shine to ocean if Earth
+    if (textures.specular) {
+      pMat.roughnessMap = textures.specular;
+    }
+
     const pMesh = new THREE.Mesh(pGeo, pMat);
     planetGroup.add(pMesh);
 
-    // ─── Earth Cloud Layer ───
+    // ─── Crisp Cloud Layer (Earth) ───
     let cloudMesh: THREE.Mesh | undefined;
     if (textures.clouds) {
       const cloudGeo = new THREE.SphereGeometry(radius * 1.012, 96, 96);
       const cloudMat = new THREE.MeshStandardMaterial({
         map: textures.clouds,
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.65,
         depthWrite: false,
       });
       cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
       planetGroup.add(cloudMesh);
     }
 
-    // ─── Atmosphere Glow (Fresnel-like) ───
+    // ─── Atmosphere Glow Shell ───
     const atmoGeo = new THREE.SphereGeometry(radius * 1.04, 64, 64);
     const atmoMat = new THREE.MeshBasicMaterial({
       color: hexColor,
       transparent: true,
-      opacity: planet.slug === "mercury" ? 0.05 : 0.18,
+      opacity: planet.slug === "mercury" ? 0.04 : 0.2,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
     });
     planetGroup.add(new THREE.Mesh(atmoGeo, atmoMat));
 
-    // Second atmosphere layer for gas giants
-    if (["jupiter", "saturn", "uranus", "neptune"].includes(planet.slug)) {
-      const atmo2 = new THREE.Mesh(
-        new THREE.SphereGeometry(radius * 1.08, 32, 32),
-        new THREE.MeshBasicMaterial({ color: hexColor, transparent: true, opacity: 0.06, side: THREE.BackSide, blending: THREE.AdditiveBlending })
-      );
-      planetGroup.add(atmo2);
-    }
-
     // ─── Saturn Rings ───
     if (planet.slug === "saturn" && textures.ring) {
       const ringGeo = new THREE.RingGeometry(radius * 1.3, radius * 2.5, 128);
-      // Fix ring UV mapping for radial texture
+      // Map ring radial UVs
       const pos = ringGeo.attributes.position;
       const uv = ringGeo.attributes.uv;
       const v3 = new THREE.Vector3();
@@ -531,7 +702,7 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     moonMesh.position.set(4.5, 0.3, 0);
     moonGroup.add(moonMesh);
 
-    // ─── Background Stars ───
+    // ─── Background Starfield ───
     const starCount = 800;
     const starPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
@@ -546,7 +717,7 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 0.5, color: 0xffffff, transparent: true, opacity: 0.7 })));
 
-    // ─── Resize ───
+    // ─── Resize Handler ───
     const handleResize = () => {
       if (!container) return;
       const w = container.clientWidth, h = container.clientHeight || 550;
@@ -556,18 +727,18 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     };
     window.addEventListener("resize", handleResize);
 
-    // ─── Animation ───
+    // ─── Animation Loop ───
     let animId: number;
     const clock = new THREE.Clock();
-
     const rotSpeed = planet.slug === "venus" ? -0.05 : planet.slug === "mercury" ? 0.03 : 0.12;
 
     const animate = () => {
       const delta = clock.getDelta();
       pMesh.rotation.y += delta * rotSpeed;
-      if (cloudMesh) cloudMesh.rotation.y += delta * rotSpeed * 1.15;
+      if (cloudMesh) cloudMesh.rotation.y += delta * rotSpeed * 1.18;
       moonGroup.rotation.y += delta * 0.35;
       moonMesh.rotation.y += delta * 0.15;
+
       controls.update();
       renderer.render(scene, camera);
       animId = requestAnimationFrame(animate);
