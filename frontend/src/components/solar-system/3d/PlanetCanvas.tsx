@@ -586,32 +586,49 @@ function makeSunTexture(w = 2048, h = 1024): THREE.CanvasTexture {
 
   // Active Sunspot Clusters with Umbra, Penumbra & Faculae
   const sunspots = [
-    { cx: 0.35, cy: 0.42, r: 24 },
-    { cx: 0.38, cy: 0.44, r: 16 },
-    { cx: 0.65, cy: 0.55, r: 28 },
-    { cx: 0.68, cy: 0.52, r: 18 },
-    { cx: 0.52, cy: 0.32, r: 20 },
+    { cx: 0.35, cy: 0.42, rx: 28, ry: 20 },
+    { cx: 0.38, cy: 0.45, rx: 18, ry: 14 },
+    { cx: 0.65, cy: 0.55, rx: 32, ry: 22 },
+    { cx: 0.68, cy: 0.52, rx: 20, ry: 16 },
+    { cx: 0.52, cy: 0.32, rx: 22, ry: 18 },
+    { cx: 0.22, cy: 0.6, rx: 16, ry: 12 },
   ];
 
   for (const ss of sunspots) {
     const px = ss.cx * w, py = ss.cy * h;
 
-    // Bright Faculae Magnetic Ring around Sunspot
-    const fg = x.createRadialGradient(px, py, ss.r * 0.8, px, py, ss.r * 2.2);
-    fg.addColorStop(0, "rgba(255, 255, 255, 0.7)");
-    fg.addColorStop(0.5, "rgba(255, 220, 100, 0.4)");
-    fg.addColorStop(1, "rgba(255, 150, 0, 0)");
+    // Bright Faculae Magnetic Aura
+    const fg = x.createRadialGradient(px, py, ss.rx * 0.5, px, py, ss.rx * 2.4);
+    fg.addColorStop(0, "rgba(255, 255, 240, 0.65)");
+    fg.addColorStop(0.5, "rgba(255, 200, 80, 0.35)");
+    fg.addColorStop(1, "rgba(255, 140, 0, 0)");
     x.fillStyle = fg;
-    x.beginPath(); x.arc(px, py, ss.r * 2.2, 0, Math.PI * 2); x.fill();
+    drawOrganicBlob(x, px, py, ss.rx * 2.2, ss.ry * 2.2, 20, 0.3, rng);
+    x.fill();
 
-    // Penumbra (Dark Orange/Brown Rim)
-    x.fillStyle = "#802b00";
-    x.beginPath(); x.arc(px, py, ss.r, 0, Math.PI * 2); x.fill();
+    // Penumbra (Wispy Reddish-Brown Transition Halo)
+    x.fillStyle = "#8a2a00";
+    x.globalAlpha = 0.85;
+    drawOrganicBlob(x, px, py, ss.rx, ss.ry, 24, 0.4, rng);
+    x.fill();
 
-    // Umbra (Cooler Dark Core)
-    x.fillStyle = "#220800";
-    x.beginPath(); x.arc(px, py, ss.r * 0.55, 0, Math.PI * 2); x.fill();
+    // Umbra (Cooler Dark Magnetic Core Pores)
+    x.fillStyle = "#1e0600";
+    x.globalAlpha = 0.95;
+    drawOrganicBlob(x, px, py, ss.rx * 0.5, ss.ry * 0.5, 20, 0.45, rng);
+    x.fill();
+
+    // Micro-pores around main sunspot
+    for (let p = 0; p < 5; p++) {
+      const mpx = px + (rng() - 0.5) * ss.rx * 2.5;
+      const mpy = py + (rng() - 0.5) * ss.ry * 2.5;
+      x.fillStyle = "#2a0a00";
+      x.beginPath();
+      x.arc(mpx, mpy, 2 + rng() * 4, 0, Math.PI * 2);
+      x.fill();
+    }
   }
+  x.globalAlpha = 1.0;
 
   // Solar Prominence / Flare Arcs
   x.strokeStyle = "rgba(255, 255, 220, 0.4)";
