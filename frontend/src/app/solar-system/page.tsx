@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight, Orbit } from "lucide-react";
-import { SolarSystemCanvas } from "@/components/solar-system/3d/SolarSystemCanvas";
 import { SpeedController } from "@/components/solar-system/SpeedController";
 import { MiniMap } from "@/components/solar-system/MiniMap";
 import { SearchBar } from "@/components/solar-system/SearchBar";
 import { MOCK_PLANETS } from "@/mocks/solar-system/planets";
+
+const SolarSystemCanvas = dynamic(
+  () => import("@/components/solar-system/3d/SolarSystemCanvas").then((m) => m.SolarSystemCanvas),
+  { ssr: false }
+);
 
 export default function SolarSystemPage() {
   const router = useRouter();
