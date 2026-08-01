@@ -550,11 +550,91 @@ function makeNeptuneTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   return t;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   7. SUN: HIGH-DEFINITION 4K SOLAR PLASMA, GRANULATION & SUNSPOTS
+   ───────────────────────────────────────────────────────────── */
+function makeSunTexture(w = 2048, h = 1024): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d")!;
+
+  // Radiant Glowing Plasma Base Gradient
+  const g = x.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, "#ffe066");
+  g.addColorStop(0.25, "#ffb700");
+  g.addColorStop(0.5, "#ff7700");
+  g.addColorStop(0.75, "#ff9900");
+  g.addColorStop(1, "#ffe066");
+  x.fillStyle = g;
+  x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(8888);
+
+  // Solar Convection Granulation Cells (10,000+ granules)
+  for (let i = 0; i < 10000; i++) {
+    const px = rng() * w, py = rng() * h;
+    const r = 2 + rng() * 6;
+    const lum = rng();
+    if (lum > 0.6) {
+      x.fillStyle = `rgba(255, 245, 180, ${(0.15 + rng() * 0.25).toFixed(2)})`;
+    } else if (lum > 0.3) {
+      x.fillStyle = `rgba(255, 150, 20, ${(0.12 + rng() * 0.2).toFixed(2)})`;
+    } else {
+      x.fillStyle = `rgba(180, 50, 0, ${(0.1 + rng() * 0.15).toFixed(2)})`;
+    }
+    x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+  }
+
+  // Active Sunspot Clusters with Umbra, Penumbra & Faculae
+  const sunspots = [
+    { cx: 0.35, cy: 0.42, r: 24 },
+    { cx: 0.38, cy: 0.44, r: 16 },
+    { cx: 0.65, cy: 0.55, r: 28 },
+    { cx: 0.68, cy: 0.52, r: 18 },
+    { cx: 0.52, cy: 0.32, r: 20 },
+  ];
+
+  for (const ss of sunspots) {
+    const px = ss.cx * w, py = ss.cy * h;
+
+    // Bright Faculae Magnetic Ring around Sunspot
+    const fg = x.createRadialGradient(px, py, ss.r * 0.8, px, py, ss.r * 2.2);
+    fg.addColorStop(0, "rgba(255, 255, 255, 0.7)");
+    fg.addColorStop(0.5, "rgba(255, 220, 100, 0.4)");
+    fg.addColorStop(1, "rgba(255, 150, 0, 0)");
+    x.fillStyle = fg;
+    x.beginPath(); x.arc(px, py, ss.r * 2.2, 0, Math.PI * 2); x.fill();
+
+    // Penumbra (Dark Orange/Brown Rim)
+    x.fillStyle = "#802b00";
+    x.beginPath(); x.arc(px, py, ss.r, 0, Math.PI * 2); x.fill();
+
+    // Umbra (Cooler Dark Core)
+    x.fillStyle = "#220800";
+    x.beginPath(); x.arc(px, py, ss.r * 0.55, 0, Math.PI * 2); x.fill();
+  }
+
+  // Solar Prominence / Flare Arcs
+  x.strokeStyle = "rgba(255, 255, 220, 0.4)";
+  x.lineWidth = 5;
+  for (let i = 0; i < 8; i++) {
+    const py = (0.2 + rng() * 0.6) * h;
+    x.beginPath();
+    x.moveTo(rng() * w, py);
+    x.bezierCurveTo(rng() * w, py - 40, rng() * w, py + 40, rng() * w, py);
+    x.stroke();
+  }
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 /* ════════════════════════════════════════════════════════════════
    TEXTURE DISPATCHER
    ════════════════════════════════════════════════════════════════ */
 function getTexturesForPlanet(slug: string) {
   switch (slug) {
+    case "sun":     return { map: makeSunTexture() };
     case "mercury": return { map: makeMercuryTexture(), bump: makeMercuryBump() };
     case "venus":   return { map: makeVenusTexture() };
     case "earth":   return { map: makeEarthTexture(), bump: makeEarthBump(), specular: makeEarthSpecularMap(), clouds: makeEarthClouds() };
@@ -628,17 +708,22 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
 
     const radius = 2.5;
     const pGeo = new THREE.SphereGeometry(radius, 128, 128);
-    const pMat = new THREE.MeshStandardMaterial({
-      map: textures.map,
-      bumpMap: textures.bump,
-      bumpScale: textures.bump ? 0.05 : 0,
-      roughness: planet.slug === "earth" ? 0.45 : planet.slug === "venus" ? 0.7 : 0.55,
-      metalness: 0.08,
-    });
-
-    // Add specular shine to ocean if Earth
-    if (textures.specular) {
-      pMat.roughnessMap = textures.specular;
+    let pMat: THREE.Material;
+    if (planet.slug === "sun") {
+      pMat = new THREE.MeshBasicMaterial({
+        map: textures.map,
+      });
+    } else {
+      pMat = new THREE.MeshStandardMaterial({
+        map: textures.map,
+        bumpMap: textures.bump,
+        bumpScale: textures.bump ? 0.05 : 0,
+        roughness: planet.slug === "earth" ? 0.45 : planet.slug === "venus" ? 0.7 : 0.55,
+        metalness: 0.08,
+      });
+      if (textures.specular) {
+        (pMat as THREE.MeshStandardMaterial).roughnessMap = textures.specular;
+      }
     }
 
     // ─── NASA Satellite Texture & Real Cloud Loader Override ───
@@ -647,16 +732,16 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     if (planet.slug === "earth") {
       const realEarthMap = textureLoader.load("/textures/planets/earth_blue_marble.jpg");
       realEarthMap.colorSpace = THREE.SRGBColorSpace;
-      pMat.map = realEarthMap;
+      (pMat as THREE.MeshStandardMaterial).map = realEarthMap;
 
       const realNormalMap = textureLoader.load("/textures/planets/earth_normal_2048.jpg");
-      pMat.normalMap = realNormalMap;
-      pMat.normalScale = new THREE.Vector2(0.65, 0.65);
+      (pMat as THREE.MeshStandardMaterial).normalMap = realNormalMap;
+      (pMat as THREE.MeshStandardMaterial).normalScale = new THREE.Vector2(0.65, 0.65);
 
       const realSpecMap = textureLoader.load("/textures/planets/earth_specular_2048.jpg");
-      pMat.roughnessMap = realSpecMap;
-      pMat.roughness = 0.35;
-      pMat.metalness = 0.05;
+      (pMat as THREE.MeshStandardMaterial).roughnessMap = realSpecMap;
+      (pMat as THREE.MeshStandardMaterial).roughness = 0.35;
+      (pMat as THREE.MeshStandardMaterial).metalness = 0.05;
     }
 
     const pMesh = new THREE.Mesh(pGeo, pMat);
@@ -679,16 +764,58 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       planetGroup.add(cloudMesh);
     }
 
-    // ─── Realistic Atmospheric Rayleigh Glow Shell ───
-    const atmoGeo = new THREE.SphereGeometry(radius * 1.022, 64, 64);
-    const atmoMat = new THREE.MeshBasicMaterial({
-      color: planet.slug === "earth" ? 0x00d5ff : hexColor,
-      transparent: true,
-      opacity: planet.slug === "earth" ? 0.12 : planet.slug === "mercury" ? 0.04 : 0.18,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-    });
-    planetGroup.add(new THREE.Mesh(atmoGeo, atmoMat));
+    // ─── Multi-Layered Solar Corona Flare Halos (Sun) ───
+    let sunCoronaOuter: THREE.Mesh | undefined;
+    if (planet.slug === "sun") {
+      const sunCoronaInner = new THREE.Mesh(
+        new THREE.SphereGeometry(radius * 1.06, 64, 64),
+        new THREE.MeshBasicMaterial({
+          color: 0xffaa00,
+          transparent: true,
+          opacity: 0.45,
+          side: THREE.BackSide,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      planetGroup.add(sunCoronaInner);
+
+      sunCoronaOuter = new THREE.Mesh(
+        new THREE.SphereGeometry(radius * 1.18, 64, 64),
+        new THREE.MeshBasicMaterial({
+          color: 0xff3300,
+          transparent: true,
+          opacity: 0.3,
+          side: THREE.BackSide,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      planetGroup.add(sunCoronaOuter);
+
+      const sunAura = new THREE.Mesh(
+        new THREE.SphereGeometry(radius * 1.35, 32, 32),
+        new THREE.MeshBasicMaterial({
+          color: 0xff1100,
+          transparent: true,
+          opacity: 0.15,
+          side: THREE.BackSide,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      planetGroup.add(sunAura);
+    }
+
+    // ─── Realistic Atmospheric Rayleigh Glow Shell (Planets) ───
+    if (planet.slug !== "sun") {
+      const atmoGeo = new THREE.SphereGeometry(radius * 1.022, 64, 64);
+      const atmoMat = new THREE.MeshBasicMaterial({
+        color: planet.slug === "earth" ? 0x00d5ff : hexColor,
+        transparent: true,
+        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "mercury" ? 0.04 : 0.18,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+      });
+      planetGroup.add(new THREE.Mesh(atmoGeo, atmoMat));
+    }
 
     // ─── Saturn Rings ───
     if (planet.slug === "saturn" && textures.ring) {
@@ -714,16 +841,18 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       pMesh.add(ringMesh);
     }
 
-    // ─── Orbiting Moon ───
+    // ─── Orbiting Moon (Only for planets, not the Sun) ───
     const moonGroup = new THREE.Group();
-    planetGroup.add(moonGroup);
-    const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
-    const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
-    moonTexture.colorSpace = THREE.SRGBColorSpace;
-    const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.85 });
-    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-    moonMesh.position.set(4.5, 0.3, 0);
-    moonGroup.add(moonMesh);
+    if (planet.slug !== "sun") {
+      planetGroup.add(moonGroup);
+      const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
+      const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+      moonTexture.colorSpace = THREE.SRGBColorSpace;
+      const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.85 });
+      const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+      moonMesh.position.set(4.5, 0.3, 0);
+      moonGroup.add(moonMesh);
+    }
 
     // ─── Background Starfield ───
     const starCount = 800;
@@ -759,8 +888,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       const delta = clock.getDelta();
       pMesh.rotation.y += delta * rotSpeed;
       if (cloudMesh) cloudMesh.rotation.y += delta * rotSpeed * 1.18;
-      moonGroup.rotation.y += delta * 0.35;
-      moonMesh.rotation.y += delta * 0.15;
+      if (planet.slug !== "sun") {
+        moonGroup.rotation.y += delta * 0.35;
+      }
+      if (sunCoronaOuter) {
+        sunCoronaOuter.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 3) * 0.04);
+      }
 
       controls.update();
       renderer.render(scene, camera);
