@@ -17,88 +17,56 @@ export function EarthHeroCanvas({ className = "", style }: { className?: string;
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     camera.position.set(0, 0.4, 6.2);
 
-    const toColor = (hex: string) => new THREE.Color(hex);
+    // ─── Texture Loader for NASA Satellite Maps ───
+    const textureLoader = new THREE.TextureLoader();
 
-    // Earth Shader Material
-    const earthUniforms = {
-      uTime: { value: 0 },
-      uOcean: { value: toColor("#0a2a5e") },
-      uOcean2: { value: toColor("#0e5aa7") },
-      uLand: { value: toColor("#1f6f4a") },
-      uLand2: { value: toColor("#3a8a5e") },
-      uLight: { value: new THREE.Vector3(1, 0.5, 0.8) },
-    };
+    // 1. Earth Base Mesh
+    const earthMap = textureLoader.load("/textures/planets/earth_blue_marble.jpg");
+    earthMap.colorSpace = THREE.SRGBColorSpace;
+    const normalMap = textureLoader.load("/textures/planets/earth_normal_2048.jpg");
+    const specMap = textureLoader.load("/textures/planets/earth_specular_2048.jpg");
 
-    const earthMat = new THREE.ShaderMaterial({
-      uniforms: earthUniforms,
-      vertexShader: `
-        varying vec3 vN; varying vec3 vP; varying vec3 vW;
-        void main(){ vN = normalize(normalMatrix * normal); vP = position; vW = normalize(mat3(modelMatrix)*normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
-      `,
-      fragmentShader: `
-        precision highp float;
-        uniform float uTime; uniform vec3 uOcean; uniform vec3 uOcean2; uniform vec3 uLand; uniform vec3 uLand2; uniform vec3 uLight;
-        varying vec3 vN; varying vec3 vP; varying vec3 vW;
-        vec3 hash3(vec3 p){ p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6))); return -1.0+2.0*fract(sin(p)*43758.5453123); }
-        float noise(vec3 p){ vec3 i=floor(p); vec3 f=fract(p); vec3 u=f*f*(3.0-2.0*f);
-          return mix(mix(mix(dot(hash3(i+vec3(0,0,0)),f-vec3(0,0,0)),dot(hash3(i+vec3(1,0,0)),f-vec3(1,0,0)),u.x),
-            mix(dot(hash3(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(hash3(i+vec3(1,1,0)),f-vec3(1,1,0)),u.x),u.y),
-            mix(mix(dot(hash3(i+vec3(0,0,1)),f-vec3(0,0,1)),dot(hash3(i+vec3(1,0,1)),f-vec3(1,0,1)),u.x),
-            mix(dot(hash3(i+vec3(0,1,1)),f-vec3(0,1,1)),dot(hash3(i+vec3(1,1,1)),f-vec3(1,1,1)),u.x),u.y),u.z); }
-        float fbm(vec3 p){ float v=0.0; float a=0.5; for(int i=0;i<5;i++){ v+=a*noise(p); p*=2.0; a*=0.5;} return v; }
-        void main(){
-          vec3 p = normalize(vP);
-          float c = fbm(p*2.4);
-          float land = smoothstep(0.02, 0.18, c);
-          float ice = smoothstep(0.72, 0.9, abs(p.y));
-          vec3 ocean = mix(uOcean, uOcean2, 0.5+0.5*fbm(p*4.0+10.0));
-          vec3 landc = mix(uLand, uLand2, 0.5+0.5*fbm(p*6.0));
-          vec3 col = mix(ocean, landc, land);
-          col = mix(col, vec3(0.85,0.9,0.95), ice*0.8);
-          float d = clamp(dot(normalize(vN), normalize(uLight)), 0.0, 1.0);
-          float night = pow(1.0-d, 2.0);
-          col *= 0.15 + 1.05*d;
-          col += vec3(0.9,0.7,0.35)*night*land*0.12;
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `,
+    const earthMat = new THREE.MeshStandardMaterial({
+      map: earthMap,
+      normalMap: normalMap,
+      normalScale: new THREE.Vector2(0.65, 0.65),
+      roughnessMap: specMap,
+      roughness: 0.35,
+      metalness: 0.05,
     });
 
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(1.6, 96, 96), earthMat);
+    const earth = new THREE.Mesh(new THREE.SphereGeometry(1.6, 128, 128), earthMat);
     earth.rotation.z = 0.35;
     scene.add(earth);
 
-    // Atmosphere Glow
-    const atmoMat = new THREE.ShaderMaterial({
+    // 2. Realistic Rayleigh Atmosphere Limb Glow
+    const atmoMat = new THREE.MeshBasicMaterial({
+      color: 0x00d5ff,
       transparent: true,
+      opacity: 0.14,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      uniforms: { uColor: { value: toColor("#4DA8FF") } },
-      vertexShader: `varying vec3 vN; void main(){ vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
-      fragmentShader: `varying vec3 vN; uniform vec3 uColor; void main(){ float i=pow(0.72-dot(vN,vec3(0,0,1.0)),3.0); gl_FragColor=vec4(uColor, clamp(i,0.0,1.0)); }`,
     });
-    const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.78, 64, 64), atmoMat);
+    const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.64, 64, 64), atmoMat);
     scene.add(atmo);
 
-    // Clouds Layer
-    const cloudMat = new THREE.ShaderMaterial({
+    // 3. Real 2K NASA Cloud Layer
+    const cloudMap = textureLoader.load("/textures/planets/earth_clouds_2048.jpg");
+    cloudMap.colorSpace = THREE.SRGBColorSpace;
+    const cloudMat = new THREE.MeshStandardMaterial({
+      map: cloudMap,
       transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: `varying vec3 vP; varying vec3 vN; void main(){ vP=position; vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
-      fragmentShader: `precision highp float; uniform float uTime; varying vec3 vP; varying vec3 vN;
-        vec3 h3(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return -1.0+2.0*fract(sin(p)*43758.5453);}
-        float n(vec3 p){vec3 i=floor(p);vec3 f=fract(p);vec3 u=f*f*(3.0-2.0*f);return mix(mix(mix(dot(h3(i),f),dot(h3(i+vec3(1,0,0)),f-vec3(1,0,0)),u.x),mix(dot(h3(i+vec3(0,1,0)),f-vec3(0,1,0)),dot(h3(i+vec3(1,1,0)),f-vec3(1,1,0)),u.x),u.y),mix(mix(dot(h3(i+vec3(0,0,1)),f-vec3(0,0,1)),dot(h3(i+vec3(1,0,1)),f-vec3(1,0,1)),u.x),mix(dot(h3(i+vec3(0,1,1)),f-vec3(0,1,1)),dot(h3(i+vec3(1,1,1)),f-vec3(1,1,1)),u.x),u.y),u.z);}
-        float fb(vec3 p){float v=0.0,a=0.5;for(int i=0;i<4;i++){v+=a*n(p);p*=2.2;a*=0.5;}return v;}
-        void main(){ vec3 p=normalize(vP); float c=fb(p*3.0+vec3(uTime*0.02,0.0,0.0)); float m=smoothstep(0.05,0.35,c); float d=clamp(dot(vN,vec3(0.6,0.3,0.7)),0.0,1.0); gl_FragColor=vec4(vec3(1.0)*(0.3+0.9*d), m*0.55); }`,
     });
-    const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.64, 72, 72), cloudMat);
+    const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.62, 96, 96), cloudMat);
     scene.add(clouds);
 
-    // Moon
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0x9aa0aa, roughness: 1, metalness: 0 });
+    // 4. Photorealistic Orbiting Moon
+    const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+    moonTexture.colorSpace = THREE.SRGBColorSpace;
+    const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.85 });
     const moon = new THREE.Mesh(new THREE.SphereGeometry(0.34, 48, 48), moonMat);
     const moonPivot = new THREE.Group();
     moonPivot.add(moon);
@@ -113,11 +81,11 @@ export function EarthHeroCanvas({ className = "", style }: { className?: string;
     scene.add(ring);
 
     // Lights
-    scene.add(new THREE.AmbientLight(0x2b3a55, 1.2));
-    const key = new THREE.DirectionalLight(0xfff2e0, 2.4);
-    key.position.set(4, 2, 4);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const key = new THREE.DirectionalLight(0xfff8f0, 3.0);
+    key.position.set(5, 3, 5);
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x8b5cf6, 1.1);
+    const rim = new THREE.DirectionalLight(0x8b5cf6, 0.6);
     rim.position.set(-4, -1, -2);
     scene.add(rim);
 
@@ -168,8 +136,6 @@ export function EarthHeroCanvas({ className = "", style }: { className?: string;
       t += 0.016;
       earth.rotation.y += 0.0016;
       clouds.rotation.y += 0.0022;
-      earthUniforms.uTime.value = t;
-      cloudMat.uniforms.uTime.value = t;
       moonPivot.rotation.y += 0.004;
       moon.rotation.y += 0.01;
       ring.rotation.z += 0.0006;
