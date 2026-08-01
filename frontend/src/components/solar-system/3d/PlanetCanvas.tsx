@@ -765,6 +765,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       (pMat as THREE.MeshStandardMaterial).map = realMarsMap;
       (pMat as THREE.MeshStandardMaterial).roughness = 0.88;
       (pMat as THREE.MeshStandardMaterial).metalness = 0.04;
+    } else if (planet.slug === "jupiter") {
+      const realJupiterMap = textureLoader.load("/textures/planets/jupiter_2048.jpg");
+      realJupiterMap.colorSpace = THREE.SRGBColorSpace;
+      (pMat as THREE.MeshStandardMaterial).map = realJupiterMap;
+      (pMat as THREE.MeshStandardMaterial).roughness = 0.62;
+      (pMat as THREE.MeshStandardMaterial).metalness = 0.02;
     }
 
     const pMesh = new THREE.Mesh(pGeo, pMat);
@@ -888,6 +894,23 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
         deimosMesh.scale.set(1.2, 0.8, 1.0);
         deimosMesh.position.set(5.2, -0.4, 0);
         moonGroup.add(deimosMesh);
+      } else if (planet.slug === "jupiter") {
+        const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+        moonTexture.colorSpace = THREE.SRGBColorSpace;
+
+        // Io (Sulfur Volcanic Moon - Yellowish)
+        const ioGeo = new THREE.SphereGeometry(0.24, 32, 32);
+        const ioMat = new THREE.MeshStandardMaterial({ map: moonTexture, color: 0xf5d061, roughness: 0.75 });
+        const ioMesh = new THREE.Mesh(ioGeo, ioMat);
+        ioMesh.position.set(4.0, 0.3, 0);
+        moonGroup.add(ioMesh);
+
+        // Europa (Icy Crust Ocean Moon - Smooth Pale White)
+        const europaGeo = new THREE.SphereGeometry(0.2, 32, 32);
+        const europaMat = new THREE.MeshStandardMaterial({ map: moonTexture, color: 0xe2e8f0, roughness: 0.35 });
+        const europaMesh = new THREE.Mesh(europaGeo, europaMat);
+        europaMesh.position.set(5.5, -0.2, 0);
+        moonGroup.add(europaMesh);
       } else {
         const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
         const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
