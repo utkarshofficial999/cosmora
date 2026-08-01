@@ -515,9 +515,44 @@ function makeMercuryBump(w = 2048, h = 1024): THREE.CanvasTexture {
 function makeVenusTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d")!;
-  const g = x.createLinearGradient(0, 0, w, h);
-  g.addColorStop(0, "#e8c96c"); g.addColorStop(0.5, "#d4a84b"); g.addColorStop(1, "#ba8932");
+  
+  // Base Golden Volcanic Regolith
+  const g = x.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, "#a06a20");
+  g.addColorStop(0.3, "#d89c3e");
+  g.addColorStop(0.5, "#e5b054");
+  g.addColorStop(0.7, "#d89c3e");
+  g.addColorStop(1, "#a06a20");
   x.fillStyle = g; x.fillRect(0, 0, w, h);
+
+  const rng = seededPRNG(9090);
+
+  // Volcanic Lava Flow Highlands (Aphrodite & Ishtar Terra)
+  const terra = [
+    { cx: 0.35, cy: 0.45, rx: 0.22, ry: 0.12, col: "#844f10" },
+    { cx: 0.65, cy: 0.3, rx: 0.18, ry: 0.1, col: "#6e3f08" },
+    { cx: 0.52, cy: 0.65, rx: 0.15, ry: 0.14, col: "#844f10" },
+  ];
+  for (const t of terra) {
+    x.fillStyle = t.col;
+    x.globalAlpha = 0.75;
+    drawOrganicBlob(x, t.cx * w, t.cy * h, t.rx * w, t.ry * h, 26, 0.4, rng);
+    x.fill();
+  }
+
+  // Bright Lava Fractures & Maxwell Montes Ridges
+  x.strokeStyle = "rgba(255, 230, 160, 0.6)";
+  x.lineWidth = 4;
+  x.globalAlpha = 0.8;
+  for (let i = 0; i < 10; i++) {
+    const py = (0.2 + rng() * 0.6) * h;
+    x.beginPath();
+    x.moveTo(rng() * w, py);
+    x.bezierCurveTo(rng() * w, py - 30, rng() * w, py + 30, rng() * w, py);
+    x.stroke();
+  }
+  x.globalAlpha = 1.0;
+
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
@@ -759,6 +794,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       (pMat as THREE.MeshStandardMaterial).roughnessMap = realSpecMap;
       (pMat as THREE.MeshStandardMaterial).roughness = 0.35;
       (pMat as THREE.MeshStandardMaterial).metalness = 0.05;
+    } else if (planet.slug === "venus") {
+      const realVenusMap = textureLoader.load("/textures/planets/venus_2048.jpg");
+      realVenusMap.colorSpace = THREE.SRGBColorSpace;
+      (pMat as THREE.MeshStandardMaterial).map = realVenusMap;
+      (pMat as THREE.MeshStandardMaterial).roughness = 0.72;
+      (pMat as THREE.MeshStandardMaterial).metalness = 0.05;
     } else if (planet.slug === "mars") {
       const realMarsMap = textureLoader.load("/textures/planets/mars_2048.jpg");
       realMarsMap.colorSpace = THREE.SRGBColorSpace;
@@ -837,9 +878,9 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     if (planet.slug !== "sun") {
       const atmoGeo = new THREE.SphereGeometry(radius * 1.022, 64, 64);
       const atmoMat = new THREE.MeshBasicMaterial({
-        color: planet.slug === "earth" ? 0x00d5ff : planet.slug === "mars" ? 0xd97706 : hexColor,
+        color: planet.slug === "earth" ? 0x00d5ff : planet.slug === "venus" ? 0xeab308 : planet.slug === "mars" ? 0xd97706 : hexColor,
         transparent: true,
-        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "mars" ? 0.08 : planet.slug === "mercury" ? 0.04 : 0.18,
+        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "venus" ? 0.24 : planet.slug === "mars" ? 0.08 : planet.slug === "mercury" ? 0.04 : 0.18,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
       });
