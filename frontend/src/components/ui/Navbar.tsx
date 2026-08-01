@@ -13,6 +13,9 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
 
+  // Solar system pages have their own HUD header — hide the main navbar
+  if (pathname?.startsWith("/solar-system")) return null;
+
   const navItems = [
     { label: "Home", href: "/" },
     { label: "About", href: "/about" },
@@ -40,7 +43,7 @@ export function Navbar() {
       />
 
       <header className="fixed top-0 left-0 right-0 z-40 px-4 md:px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 glass-panel rounded-2xl p-3 border border-white/10 shadow-2xl">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 rounded-2xl p-3 bg-transparent backdrop-blur-sm border border-white/[0.06] shadow-none">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
