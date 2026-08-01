@@ -15,11 +15,12 @@ export function Navbar() {
 
   const navItems = [
     { label: "Home", href: "/" },
+    { label: "About", href: "/about" },
+    { label: "Features", href: "/features" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Contact", href: "/contact" },
     { label: "Solar System", href: "/solar-system" },
     { label: "Missions", href: "/missions" },
-    { label: "Stories", href: "/stories" },
-    { label: "AI Assistant", href: "/ai-assistant" },
-    { label: "Analytics", href: "/analytics" },
   ];
 
   const handleSignInClick = () => {

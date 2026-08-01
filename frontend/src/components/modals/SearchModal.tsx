@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { Search, X, Compass, Rocket, BookOpen, Bot } from "lucide-react";
-
-interface SearchResult {
-  title: string;
-  category: "Planet" | "Mission" | "Story" | "AI";
-  href: string;
-  snippet: string;
-}
+import { Search } from "lucide-react";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -17,112 +10,76 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
-  const [query, setQuery] = useState("");
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        if (isOpen) onClose();
-        else onClose(); // parent state handler
-      }
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape") {
         onClose();
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const results: SearchResult[] = [
-    {
-      title: "Earth — 3rd Sol Planet",
-      category: "Planet" as const,
-      href: "/solar-system",
-      snippet: "Radius 6,371km, mass 5.97x10²⁴kg, 1 moon.",
-    },
-    {
-      title: "Artemis III Lunar Landing",
-      category: "Mission" as const,
-      href: "/missions",
-      snippet: "NASA human flight to lunar South Pole.",
-    },
-    {
-      title: "Apollo 11: The First Footsteps",
-      category: "Story" as const,
-      href: "/stories/apollo-11-legacy",
-      snippet: "Neil Armstrong & Buzz Aldrin lunar descent.",
-    },
-    {
-      title: "James Webb: Peering into Creation",
-      category: "Story" as const,
-      href: "/stories/james-webb-deep-space",
-      snippet: "JWST 18 beryllium gold mirrors deep field.",
-    },
-    {
-      title: "Cosmora 3D Hologram Assistant",
-      category: "AI" as const,
-      href: "/ai-assistant",
-      snippet: "Ask AI grounded RAG space queries.",
-    },
-  ].filter(
-    (item) =>
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.snippet.toLowerCase().includes(query.toLowerCase())
-  );
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl glass-panel rounded-3xl p-6 border border-cyan-500/40 shadow-2xl shadow-cyan-500/20">
-        {/* Search Input Bar */}
-        <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-4">
-          <Search className="w-5 h-5 text-cyan-400 shrink-0" />
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[100] bg-[#030712]/70 backdrop-blur-md flex items-start justify-center pt-[14vh]"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-[min(600px,92vw)] rounded-2xl bg-[#08111F]/95 border border-white/14 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.6)] text-white"
+      >
+        <div className="flex items-center gap-3 p-[18px_22px] border-b border-white/10">
+          <Search className="w-5 h-5 text-[#4DA8FF]" />
           <input
-            type="text"
             autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search planets, missions, stories, or AI queries (Press Esc to close)..."
-            className="w-full bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+            placeholder="Search planets, missions, stories…"
+            className="flex-1 bg-transparent border-none outline-none text-white text-base font-sans"
           />
-          <button
-            onClick={onClose}
-            className="p-1 text-slate-400 hover:text-white rounded-lg glass-button"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <kbd className="text-xs text-white/40 border border-white/15 rounded-md px-1.5 py-0.5">
+            ESC
+          </kbd>
         </div>
-
-        {/* Results List */}
-        <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-none">
-          {results.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-500 font-mono">
-              No matching space records found for &quot;{query}&quot;
-            </div>
-          ) : (
-            results.map((r, i) => (
-              <Link
-                key={i}
-                href={r.href}
-                onClick={onClose}
-                className="block p-3 rounded-2xl bg-slate-900/60 border border-white/5 hover:border-cyan-400/40 transition-all group"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
-                    {r.title}
-                  </h4>
-                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-slate-950 text-cyan-400 border border-white/10">
-                    {r.category}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 font-mono line-clamp-1">
-                  {r.snippet}
-                </p>
-              </Link>
-            ))
-          )}
+        <div className="p-3">
+          <div className="text-[11px] tracking-[2px] text-white/40 p-[8px_12px] uppercase font-mono">
+            QUICK JUMP
+          </div>
+          <Link
+            href="/solar-system"
+            onClick={onClose}
+            className="flex items-center gap-3 p-3 rounded-xl text-white hover:bg-[#4DA8FF]/12 transition-colors"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#4DA8FF]" />
+            Interactive Solar System
+          </Link>
+          <Link
+            href="/missions"
+            onClick={onClose}
+            className="flex items-center gap-3 p-3 rounded-xl text-white hover:bg-[#4DA8FF]/12 transition-colors"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#FF7B54]" />
+            Live Mission Control
+          </Link>
+          <Link
+            href="/ai-assistant"
+            onClick={onClose}
+            className="flex items-center gap-3 p-3 rounded-xl text-white hover:bg-[#4DA8FF]/12 transition-colors"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#00E5FF]" />
+            AI Space Assistant (Nova)
+          </Link>
+          <Link
+            href="/stories"
+            onClick={onClose}
+            className="flex items-center gap-3 p-3 rounded-xl text-white hover:bg-[#4DA8FF]/12 transition-colors"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#8B5CF6]" />
+            Immersive Stories & Narratives
+          </Link>
         </div>
       </div>
     </div>

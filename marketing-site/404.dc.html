@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="cosmos.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#030712;color:#F5F7FA;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+  ::selection{background:rgba(77,168,255,.35)}
+  a{color:#4DA8FF;text-decoration:none}a:hover{color:#00E5FF}
+  @keyframes floatA{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-26px) rotate(6deg)}}
+  @keyframes floatS{0%,100%{transform:translateY(0) rotate(8deg)}50%{transform:translateY(20px) rotate(-4deg)}}
+  @keyframes spark{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.3)}}
+  @keyframes tether{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  @keyframes bignum{0%,100%{text-shadow:0 0 40px rgba(77,168,255,.5),0 0 80px rgba(139,92,246,.3)}50%{text-shadow:0 0 60px rgba(77,168,255,.8),0 0 120px rgba(139,92,246,.5)}}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="--blue:#4DA8FF;--purple:#8B5CF6;--cyan:#00E5FF;--orange:#FF7B54;--white:#F5F7FA;position:relative;height:100vh;width:100%;background:radial-gradient(900px 700px at 70% 30%,rgba(139,92,246,.2),transparent 60%),radial-gradient(700px 600px at 20% 80%,rgba(77,168,255,.14),transparent 55%),#030712;display:flex;align-items:center;justify-content:center;overflow:hidden">
+
+  <canvas ref="{{ bgRef }}" style="position:absolute;inset:0;width:100%;height:100%;z-index:0"></canvas>
+
+  <a href="Landing.dc.html" style="position:absolute;top:26px;left:40px;z-index:10;display:flex;align-items:center;gap:12px;color:var(--white)"><span style="width:30px;height:30px;border-radius:50%;background:conic-gradient(from 180deg,#4DA8FF,#8B5CF6,#00E5FF,#4DA8FF);box-shadow:0 0 20px rgba(77,168,255,.6)"></span><span style="font-family:'Space Grotesk';font-weight:700;font-size:20px;letter-spacing:.5px">COSMORA</span></a>
+
+  <!-- Broken satellite -->
+  <div style="position:absolute;top:16%;right:12%;z-index:1;animation:floatS 9s ease-in-out infinite">
+    <svg width="150" height="120" viewBox="0 0 150 120" fill="none" stroke="rgba(245,247,250,.55)" stroke-width="1.5">
+      <rect x="60" y="46" width="30" height="26" rx="3" fill="rgba(139,92,246,.15)"/>
+      <rect x="18" y="50" width="34" height="18" rx="2" fill="rgba(77,168,255,.12)"/>
+      <line x1="18" y1="55" x2="52" y2="55"/><line x1="18" y1="63" x2="52" y2="63"/>
+      <path d="M98 52 L128 40 L132 66 L100 66 Z" fill="rgba(0,229,255,.1)" stroke="rgba(0,229,255,.5)" transform="rotate(12 110 55)"/>
+      <line x1="52" y1="59" x2="60" y2="59"/><line x1="90" y1="59" x2="98" y2="59"/>
+      <circle cx="75" cy="40" r="4"/><line x1="75" y1="44" x2="75" y2="46"/>
+      <path d="M70 78 l6 10 M80 80 l-5 9" stroke="rgba(255,123,84,.8)"/>
+    </svg>
+    <span style="position:absolute;top:64px;left:70px;width:6px;height:6px;border-radius:50%;background:var(--orange);animation:spark 1.4s infinite"></span>
+    <span style="position:absolute;top:74px;left:82px;width:4px;height:4px;border-radius:50%;background:var(--cyan);animation:spark 1.9s infinite"></span>
+  </div>
+
+  <!-- Astronaut -->
+  <div style="position:absolute;left:14%;bottom:16%;z-index:1;animation:floatA 8s ease-in-out infinite">
+    <svg width="170" height="210" viewBox="0 0 170 210">
+      <line x1="120" y1="60" x2="168" y2="6" stroke="rgba(245,247,250,.35)" stroke-width="1.5" stroke-dasharray="3 5" style="transform-origin:120px 60px;animation:tether 6s ease-in-out infinite"/>
+      <ellipse cx="82" cy="118" rx="42" ry="52" fill="#0d1526" stroke="rgba(245,247,250,.45)" stroke-width="2"/>
+      <circle cx="82" cy="62" r="34" fill="#0d1526" stroke="rgba(245,247,250,.5)" stroke-width="2"/>
+      <path d="M60 54 a24 24 0 0 1 44 0 a30 20 0 0 1 -44 0 z" fill="url(#visor)"/>
+      <defs><linearGradient id="visor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4DA8FF"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs>
+      <circle cx="72" cy="52" r="4" fill="rgba(255,255,255,.5)"/>
+      <rect x="66" y="104" width="32" height="26" rx="5" fill="#111a2e" stroke="rgba(0,229,255,.5)"/>
+      <circle cx="76" cy="114" r="3" fill="#00E5FF"/><circle cx="88" cy="114" r="3" fill="#FF7B54"/>
+      <rect x="26" y="96" width="24" height="16" rx="8" fill="#0d1526" stroke="rgba(245,247,250,.45)" stroke-width="2" transform="rotate(-30 40 104)"/>
+      <rect x="118" y="52" width="24" height="16" rx="8" fill="#0d1526" stroke="rgba(245,247,250,.45)" stroke-width="2" transform="rotate(30 130 60)"/>
+      <rect x="52" y="164" width="20" height="34" rx="9" fill="#0d1526" stroke="rgba(245,247,250,.45)" stroke-width="2"/>
+      <rect x="94" y="164" width="20" height="34" rx="9" fill="#0d1526" stroke="rgba(245,247,250,.45)" stroke-width="2"/>
+    </svg>
+  </div>
+
+  <!-- Content -->
+  <div style="position:relative;z-index:5;text-align:center;max-width:640px;padding:0 40px">
+    <div style="font-family:'Space Grotesk';font-weight:700;font-size:clamp(120px,20vw,220px);line-height:.9;letter-spacing:-4px;background:linear-gradient(120deg,#4DA8FF,#8B5CF6,#00E5FF);-webkit-background-clip:text;background-clip:text;color:transparent;animation:bignum 4s ease-in-out infinite;margin-bottom:10px">404</div>
+    <h1 style="font-family:'Space Grotesk';font-weight:700;font-size:clamp(24px,3.4vw,38px);letter-spacing:-.5px;margin-bottom:16px">Looks like you're drifting through deep space.</h1>
+    <p style="color:rgba(245,247,250,.65);font-size:clamp(15px,1.6vw,18px);line-height:1.6;margin-bottom:34px">The coordinates you entered don't map to any known object. Let's navigate you back to a charted region of the universe.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a href="Landing.dc.html" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#4DA8FF,#8B5CF6);color:#fff;padding:14px 26px;border-radius:14px;font-weight:600;box-shadow:0 0 30px rgba(77,168,255,.4)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11 12 3l9 8M5 10v10h14V10"/></svg>Return Home</a>
+      <a href="Features.dc.html" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#fff;padding:14px 24px;border-radius:14px;font-weight:500;backdrop-filter:blur(10px)" style-hover="border-color:rgba(77,168,255,.6)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="4"/></svg>Explore Solar System</a>
+      <button onClick="{{ randomStory }}" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#fff;padding:14px 24px;border-radius:14px;font-weight:500;backdrop-filter:blur(10px);cursor:pointer;font-family:inherit;font-size:15px" style-hover="border-color:rgba(0,229,255,.6)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Random Story</button>
+    </div>
+    <div ref="{{ storyRef }}" style="margin-top:24px;font-size:14px;color:var(--cyan);min-height:20px;opacity:0;transition:opacity .4s"></div>
+  </div>
+</div>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="g"><stop offset="0" stop-color="#4DA8FF"/><stop offset="1" stop-color="#8B5CF6"/></radialGradient></defs><rect width="100" height="100" fill="#030712"/><circle cx="50" cy="50" r="24" fill="url(#g)"/><text x="50" y="59" font-size="26" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">C</text></svg></template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    this._cl = [];
+    if (this.bgRef && window.Cosmos) this._cl.push(window.Cosmos.starfield(this.bgRef, { density: 0.00024 }));
+    this._stories = [
+      'Voyager: Message in a Bottle', 'The Night the Sky Fell (Chelyabinsk)', 'Chandrayaan-3: A Soft Landing',
+      'Cassini\'s Grand Finale', 'The First Image of a Black Hole', 'Apollo 13: Failure Is Not an Option',
+      'JWST and the Oldest Light',
+    ];
+  }
+  componentWillUnmount() { (this._cl || []).forEach(f => f && f()); }
+  randomStory() {
+    if (!this.storyRef) return;
+    const s = this._stories[Math.floor(Math.random() * this._stories.length)];
+    this.storyRef.style.opacity = '0';
+    setTimeout(() => { this.storyRef.innerHTML = 'Beaming you to → <b>' + s + '</b>'; this.storyRef.style.opacity = '1'; }, 200);
+  }
+  renderVals() {
+    return { rootRef: el => this.rootRef = el, bgRef: el => this.bgRef = el, storyRef: el => this.storyRef = el, randomStory: () => this.randomStory() };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="cosmos.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#030712;color:#F5F7FA;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  ::selection{background:rgba(77,168,255,.35)}
+  a{color:#4DA8FF;text-decoration:none}a:hover{color:#00E5FF}
+  ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:#030712}::-webkit-scrollbar-thumb{background:linear-gradient(#4DA8FF,#8B5CF6);border-radius:10px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spinr{to{transform:rotate(-360deg)}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  @keyframes pingdot{0%{transform:scale(.6);opacity:1}80%,100%{transform:scale(2.4);opacity:0}}
+  @keyframes bar{0%,100%{height:20%}50%{height:100%}}
+  @keyframes aurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="--bg:#030712;--glass:rgba(255,255,255,0.06);--blue:#4DA8FF;--purple:#8B5CF6;--cyan:#00E5FF;--orange:#FF7B54;--white:#F5F7FA;position:relative;min-height:100vh;background:radial-gradient(1200px 800px at 20% -10%,rgba(77,168,255,.16),transparent 60%),radial-gradient(1000px 700px at 90% 20%,rgba(139,92,246,.13),transparent 55%),#030712">
+
+  <canvas ref="{{ bgRef }}" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none"></canvas>
+
+  <nav ref="{{ navRef }}" style="position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;transition:all .4s;border-bottom:1px solid transparent">
+    <a href="Landing.dc.html" style="display:flex;align-items:center;gap:12px;color:var(--white)"><span style="width:32px;height:32px;border-radius:50%;background:conic-gradient(from 180deg,#4DA8FF,#8B5CF6,#00E5FF,#4DA8FF);box-shadow:0 0 20px rgba(77,168,255,.6)"></span><span style="font-family:'Space Grotesk';font-weight:700;font-size:22px;letter-spacing:.5px">COSMORA</span></a>
+    <div style="display:flex;align-items:center;gap:34px;font-size:15px">
+      <a href="Landing.dc.html" style="color:var(--white);opacity:.7">Home</a>
+      <a href="About.dc.html" style="color:var(--white);opacity:.7">About</a>
+      <a href="Features.dc.html" style="color:var(--cyan);opacity:1">Features</a>
+      <a href="Pricing.dc.html" style="color:var(--white);opacity:.7">Pricing</a>
+      <a href="Contact.dc.html" style="color:var(--white);opacity:.7">Contact</a>
+    </div>
+    <a href="Pricing.dc.html" style="background:linear-gradient(135deg,#4DA8FF,#8B5CF6);color:#fff;padding:9px 20px;border-radius:12px;font-weight:600;font-size:14px">Start Exploring</a>
+  </nav>
+
+  <section style="position:relative;z-index:2;max-width:960px;margin:0 auto;padding:180px 40px 60px;text-align:center">
+    <div data-reveal style="display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;background:var(--glass);border:1px solid rgba(0,229,255,.3);backdrop-filter:blur(10px);font-size:13px;margin-bottom:26px"><span style="width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)"></span>The platform</div>
+    <h1 data-reveal style="font-family:'Space Grotesk';font-weight:700;font-size:clamp(38px,6vw,76px);line-height:1.04;letter-spacing:-1.5px;margin-bottom:22px">Everything you need to <span style="background:linear-gradient(120deg,#4DA8FF,#8B5CF6,#00E5FF);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:aurora 6s ease infinite">explore the universe</span></h1>
+    <p data-reveal style="font-size:clamp(16px,1.5vw,20px);color:rgba(245,247,250,.7);max-width:600px;margin:0 auto;line-height:1.6">Twelve deeply-built experiences, one seamless universe. Each designed to turn curiosity into understanding.</p>
+  </section>
+
+  <section style="position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:40px 40px 40px" data-rows></section>
+
+  <section style="position:relative;z-index:2;max-width:1280px;margin:0 auto;padding:40px 40px 80px">
+    <div data-reveal style="text-align:center;margin-bottom:44px"><div style="color:var(--purple);font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">And more</div><h2 style="font-family:'Space Grotesk';font-weight:700;font-size:clamp(28px,3.6vw,44px);letter-spacing:-1px">Built into every corner</h2></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px" data-more></div>
+  </section>
+
+  <section style="position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:0 40px 100px">
+    <div data-reveal style="position:relative;border-radius:28px;padding:60px 48px;text-align:center;overflow:hidden;border:1px solid rgba(77,168,255,.25);background:radial-gradient(700px 400px at 50% 0%,rgba(77,168,255,.25),transparent 60%),linear-gradient(160deg,rgba(139,92,246,.15),rgba(3,7,18,.6))">
+      <h2 style="font-family:'Space Grotesk';font-weight:700;font-size:clamp(28px,3.6vw,44px);letter-spacing:-1px;margin-bottom:14px">Start exploring, free</h2>
+      <p style="color:rgba(245,247,250,.7);max-width:460px;margin:0 auto 28px">No signup required to fly through the solar system. Create an account to save your journey.</p>
+      <a href="Pricing.dc.html" style="background:linear-gradient(135deg,#4DA8FF,#8B5CF6);color:#fff;padding:14px 30px;border-radius:14px;font-weight:600">See plans</a>
+    </div>
+  </section>
+
+  <footer style="position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.08);background:rgba(8,17,31,.6);backdrop-filter:blur(12px)">
+    <div style="max-width:1280px;margin:0 auto;padding:40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="width:30px;height:30px;border-radius:50%;background:conic-gradient(from 180deg,#4DA8FF,#8B5CF6,#00E5FF,#4DA8FF)"></span><span style="font-family:'Space Grotesk';font-weight:700;font-size:20px">COSMORA</span></div>
+      <div style="display:flex;gap:26px;font-size:14px"><a href="About.dc.html" style="color:rgba(245,247,250,.6)">About</a><a href="Pricing.dc.html" style="color:rgba(245,247,250,.6)">Pricing</a><a href="Contact.dc.html" style="color:rgba(245,247,250,.6)">Contact</a></div>
+      <span style="color:rgba(245,247,250,.4);font-size:13px">© 2026 Cosmora</span>
+    </div>
+  </footer>
+</div>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="g"><stop offset="0" stop-color="#4DA8FF"/><stop offset="1" stop-color="#8B5CF6"/></radialGradient></defs><rect width="100" height="100" fill="#030712"/><circle cx="50" cy="50" r="24" fill="url(#g)"/><text x="50" y="59" font-size="26" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">C</text></svg></template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    this._cl = [];
+    if (this.bgRef && window.Cosmos) this._cl.push(window.Cosmos.starfield(this.bgRef));
+    this._onScroll = () => { if (!this.navRef) return; const s = window.scrollY > 40;
+      Object.assign(this.navRef.style, s ? { background: 'rgba(8,17,31,.7)', backdropFilter: 'blur(16px)', borderBottomColor: 'rgba(255,255,255,.08)', padding: '12px 40px' } : { background: 'transparent', backdropFilter: 'none', borderBottomColor: 'transparent', padding: '18px 40px' }); };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._io = new IntersectionObserver((e) => e.forEach(en => { if (en.isIntersecting) { en.target.style.opacity = '1'; en.target.style.transform = 'none'; this._io.unobserve(en.target); } }), { threshold: 0.12 });
+    this.build();
+    this.observe();
+  }
+  observe() { if (!this.rootRef) return; this.rootRef.querySelectorAll('[data-reveal]:not([data-obs])').forEach((el, i) => { el.setAttribute('data-obs', '1'); el.style.opacity = '0'; el.style.transform = 'translateY(32px)'; el.style.transition = `opacity .8s cubic-bezier(.2,.7,.2,1) ${(i % 3) * .07}s, transform .8s cubic-bezier(.2,.7,.2,1) ${(i % 3) * .07}s`; this._io.observe(el); }); }
+  componentWillUnmount() { (this._cl || []).forEach(f => f && f()); window.removeEventListener('scroll', this._onScroll); if (this._io) this._io.disconnect(); }
+
+  illo(kind, c) {
+    // CSS/SVG cosmic illustrations per feature
+    const base = 'position:relative;border-radius:22px;border:1px solid rgba(255,255,255,.1);overflow:hidden;min-height:340px;background:radial-gradient(400px 300px at 60% 30%,' + c + '22,transparent 60%),#08111F;display:grid;place-items:center';
+    const I = {
+      solar: `<div style="position:relative;width:260px;height:260px"><div style="position:absolute;inset:0;border:1px solid rgba(255,255,255,.12);border-radius:50%"></div><div style="position:absolute;inset:34px;border:1px solid rgba(255,255,255,.1);border-radius:50%"></div><div style="position:absolute;inset:70px;border:1px solid rgba(255,255,255,.08);border-radius:50%"></div><div style="position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,${c});box-shadow:0 0 40px ${c}"></div><div style="position:absolute;inset:0;animation:spin 14s linear infinite"><div style="position:absolute;top:-6px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#4DA8FF;box-shadow:0 0 14px #4DA8FF"></div></div><div style="position:absolute;inset:34px;animation:spin 9s linear infinite"><div style="position:absolute;top:-5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#FF7B54"></div></div></div>`,
+      story: `<div style="width:80%;display:flex;flex-direction:column;gap:14px">${[1,.75,.55].map((w,i)=>`<div style="height:${i?12:20}px;width:${w*100}%;border-radius:6px;background:linear-gradient(90deg,${c}${i?'55':'aa'},transparent)"></div>`).join('')}<div style="margin-top:10px;height:120px;border-radius:14px;background:radial-gradient(200px 120px at 30% 40%,${c}44,transparent),#0b1424;border:1px solid rgba(255,255,255,.08)"></div></div>`,
+      mission: `<div style="width:78%"><div style="display:flex;justify-content:space-between;margin-bottom:16px"><span style="font-family:'Space Grotesk';color:${c};font-weight:700">T- 00:14:22</span><span style="font-size:12px;color:rgba(245,247,250,.5)">● LIVE</span></div><div style="height:8px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:20px"><div style="height:100%;width:68%;background:linear-gradient(90deg,${c},#8B5CF6)"></div></div><div style="display:flex;gap:10px;justify-content:center;align-items:flex-end;height:70px">${[1,2,3,4,5,6,7].map(n=>`<span style="width:10px;background:${c};border-radius:4px;animation:bar ${0.8+n*0.12}s ease-in-out infinite;opacity:.7"></span>`).join('')}</div></div>`,
+      timeline: `<div style="width:76%;position:relative;padding-left:24px"><div style="position:absolute;left:5px;top:0;bottom:0;width:2px;background:linear-gradient(${c},#8B5CF6)"></div>${['1957','1969','2024'].map(y=>`<div style="position:relative;margin-bottom:22px"><span style="position:absolute;left:-24px;top:2px;width:12px;height:12px;border-radius:50%;background:${c};box-shadow:0 0 12px ${c}"></span><div style="font-family:'Space Grotesk';color:${c};font-weight:700">${y}</div><div style="height:8px;width:70%;border-radius:5px;background:rgba(255,255,255,.1);margin-top:6px"></div></div>`).join('')}</div>`,
+      theory: `<svg width="240" height="200" viewBox="0 0 240 200"><defs><radialGradient id="g" cx="50%" cy="50%"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><ellipse cx="120" cy="100" rx="100" ry="30" fill="none" stroke="${c}" stroke-width="1" opacity=".5"/><ellipse cx="120" cy="100" rx="70" ry="70" fill="none" stroke="${c}" stroke-width="1" opacity=".3"/><circle cx="120" cy="100" r="18" fill="url(#g)"/><circle cx="120" cy="100" r="6" fill="#fff"/><circle cx="220" cy="100" r="5" fill="#FF7B54"/><circle cx="190" cy="30" r="4" fill="#4DA8FF"/></svg>`,
+      ai: `<div style="width:74%;display:flex;flex-direction:column;gap:12px"><div style="align-self:flex-end;max-width:70%;padding:12px 16px;border-radius:16px 16px 4px 16px;background:rgba(255,255,255,.08);font-size:13px">How far is Mars right now?</div><div style="align-self:flex-start;max-width:80%;padding:12px 16px;border-radius:16px 16px 16px 4px;background:linear-gradient(135deg,${c}33,#8B5CF622);border:1px solid ${c}44;font-size:13px;line-height:1.5">Mars is currently <b style="color:${c}">78.3M km</b> away — about 4.3 light-minutes. Want a guided flyby?</div><div style="display:flex;gap:6px;padding-left:6px">${[0,1,2].map(i=>`<span style="width:7px;height:7px;border-radius:50%;background:${c};animation:pingdot 1.4s ${i*.2}s infinite"></span>`).join('')}</div></div>`,
+    };
+    return `<div style="${base}">${I[kind] || I.solar}</div>`;
+  }
+
+  build() {
+    const r = this.rootRef; if (!r) return;
+    const C = { blue: '#4DA8FF', purple: '#8B5CF6', cyan: '#00E5FF', orange: '#FF7B54' };
+    const rows = [
+      { k: 'solar', c: C.blue, kick: 'Explore', t: 'Interactive Solar System', d: 'Fly through a real-scale, physics-aware model of our solar system. Pinch, orbit and dive into any world to unlock its story, moons and missions.', b: ['Real orbital mechanics', 'Tap-to-explore every body', '60fps on any device'] },
+      { k: 'story', c: C.purple, kick: 'Immerse', t: 'Story Universe', d: 'Scroll-driven cinematic narratives that blend real telemetry, archival imagery and spatial audio into experiences you feel, not just read.', b: ['1,240+ chapters', 'Spatial audio narration', 'Cited, accurate science'] },
+      { k: 'mission', c: C.orange, kick: 'Track', t: 'Mission Control', d: 'Follow every active and upcoming launch worldwide with live countdowns, telemetry and trajectory visualizations as they happen.', b: ['Live global launch feed', 'Countdown & windows', 'Trajectory replays'] },
+      { k: 'timeline', c: C.blue, kick: 'Understand', t: 'Space Timeline', d: 'A living timeline from Sputnik to Starship. Scrub through 70 years of spaceflight and see how each milestone set up the next.', b: ['Every milestone linked', 'Filter by agency & era', 'Jump into any story'] },
+      { k: 'theory', c: C.cyan, kick: 'Learn', t: 'Space Theories', d: 'Interactive explainers for the ideas that shape the frontier — orbital mechanics, relativity, black holes — visualized, not lectured.', b: ['Visual-first explainers', 'Interactive simulations', 'Beginner to expert'] },
+      { k: 'ai', c: C.purple, kick: 'Ask', t: 'AI Assistant — Nova', d: 'Ask anything about the cosmos and get sourced, visual answers. Nova can build a guided tour of any topic on the spot.', b: ['Sourced answers', 'Generates guided tours', 'Voice enabled'] },
+    ];
+    r.querySelector('[data-rows]').innerHTML = rows.map((row, i) => {
+      const txt = `<div style="flex:1"><div style="color:${row.c};font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">${row.kick}</div><h2 style="font-family:'Space Grotesk';font-weight:700;font-size:clamp(26px,3vw,38px);letter-spacing:-.5px;margin-bottom:16px">${row.t}</h2><p style="color:rgba(245,247,250,.68);line-height:1.7;font-size:16px;margin-bottom:22px">${row.d}</p><div style="display:flex;flex-direction:column;gap:12px">${row.b.map(x => `<div style="display:flex;align-items:center;gap:12px;font-size:15px"><span style="width:22px;height:22px;border-radius:50%;background:${row.c}22;border:1px solid ${row.c}55;display:grid;place-items:center;color:${row.c};font-size:12px">✓</span>${x}</div>`).join('')}</div></div>`;
+      const pic = `<div style="flex:1">${this.illo(row.k, row.c)}</div>`;
+      return `<div data-reveal style="display:flex;gap:56px;align-items:center;padding:44px 0;${i ? 'border-top:1px solid rgba(255,255,255,.06)' : ''}">${i % 2 ? pic + txt : txt + pic}</div>`;
+    }).join('');
+
+    const more = [
+      ['Analytics', 'Personal dashboards of what you\'ve explored and learned.', C.blue],
+      ['Achievements', 'Unlock badges as you journey deeper into the cosmos.', C.orange],
+      ['Learning System', 'Structured paths for classrooms and self-learners.', C.purple],
+      ['3D Experiences', 'Photoreal, downloadable 3D models of every spacecraft.', C.cyan],
+      ['Command Search', 'Jump to any planet, mission or story with ⌘K.', C.blue],
+      ['Voice Assistant', 'Explore hands-free — just ask, and Nova responds.', C.purple],
+    ];
+    r.querySelector('[data-more]').innerHTML = more.map(m => `<div data-reveal style="border-radius:18px;padding:26px;border:1px solid rgba(255,255,255,.09);background:var(--glass);backdrop-filter:blur(14px);transition:transform .4s,border-color .4s" onmouseover="this.style.transform='translateY(-6px)';this.style.borderColor='${m[2]}55'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(255,255,255,.09)'"><div style="width:40px;height:4px;border-radius:4px;background:${m[2]};margin-bottom:16px"></div><h3 style="font-family:'Space Grotesk';font-weight:600;font-size:19px;margin-bottom:8px">${m[0]}</h3><p style="color:rgba(245,247,250,.62);font-size:14px;line-height:1.6">${m[1]}</p></div>`).join('');
+
+    this.observe();
+  }
+  renderVals() { return { rootRef: el => this.rootRef = el, bgRef: el => this.bgRef = el, navRef: el => this.navRef = el }; }
+}
+</script>
+</body>
+</html>
