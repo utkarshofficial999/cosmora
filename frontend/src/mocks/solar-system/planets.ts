@@ -37,16 +37,16 @@ export const MOCK_PLANETS: Record<string, PlanetDetail> = {
     distanceSun: "0 AU",
     tempAvg: "5,500°C (Surface) / 15M°C (Core)",
     moonsCount: 0,
-    description: "Yellow dwarf star containing 99.86% of the mass of the Solar System. Powered by nuclear fusion converting 600 million tons of hydrogen per second.",
+    description: "Yellow dwarf star containing 99.86% of the mass of the Solar System. Powered by nuclear fusion converting 600 million tons of hydrogen per second, its surface features intense magnetic sunspots, solar flares, and coronal mass ejections.",
     atmosphereLayers: [
-      { name: "Photosphere", altitude: "500 km", desc: "Visible surface producing solar light." },
-      { name: "Chromosphere", altitude: "2,000 km", desc: "Reddish gaseous layer above photosphere." },
-      { name: "Corona", altitude: "Millions of km", desc: "Outermost plasma aura emitting solar wind." },
+      { name: "Photosphere & Sunspots", altitude: "0-500 km", desc: "Visible surface harboring sunspots—cool magnetic active regions with dark central Umbras (3,000°C) and reddish-brown Penumbras surrounded by bright Faculae." },
+      { name: "Chromosphere & Flares", altitude: "2,000 km", desc: "Rosy-red lower atmosphere where magnetic reconnection triggers solar flares and prominences." },
+      { name: "Solar Corona", altitude: "Millions of km", desc: "Outermost superheated plasma aura reaching 2,000,000°C emitting continuous solar wind into the heliosphere." },
     ],
     internalStructure: [
-      { layer: "Core", thickness: "175,000 km", desc: "Nuclear fusion engine at 15 million kelvin." },
-      { layer: "Radiative Zone", thickness: "350,000 km", desc: "Energy transport via photon radiation." },
-      { layer: "Convective Zone", thickness: "200,000 km", desc: "Plasma convection currents carrying heat." },
+      { layer: "Core", thickness: "175,000 km", desc: "Nuclear fusion engine converting hydrogen to helium under 250 billion atmospheres pressure at 15,000,000°C." },
+      { layer: "Radiative Zone", thickness: "350,000 km", desc: "Dense energy transport layer where photons take 100,000 years to bounce outward." },
+      { layer: "Convective Zone & Dynamo", thickness: "200,000 km", desc: "Boiling plasma convection currents generating the Sun's powerful 11-year magnetic cycle." },
     ],
     missions: [
       { agency: "NASA", name: "Parker Solar Probe", year: "2018", type: "Corona Touch" },
@@ -56,7 +56,7 @@ export const MOCK_PLANETS: Record<string, PlanetDetail> = {
     gallery: [
       { url: "https://images.unsplash.com/photo-1532635241-17e820acc59f?auto=format&fit=crop&w=800&q=80", caption: "Solar Flare Ejection Captured by SDO" },
     ],
-    aiSummary: "The Sun generates 3.8×10²6 watts of energy per second through proton-proton chain nuclear fusion in its core.",
+    aiSummary: "The Sun's dark surface spots are Sunspots—cooler magnetic active regions where suppressed plasma convection forms dark Umbra cores (3,000°C) encircled by wispy Penumbra halos and bright Faculae magnetic rings.",
   },
   mercury: {
     id: "mercury",
