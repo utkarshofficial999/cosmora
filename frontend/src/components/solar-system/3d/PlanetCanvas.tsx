@@ -619,7 +619,7 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     rimLight.position.set(-6, -3, -4);
     scene.add(rimLight);
 
-    // ─── Load Procedural Textures ───
+    // ─── Load Procedural Textures & NASA Satellite Maps ───
     const textures = getTexturesForPlanet(planet.slug);
 
     // ─── Planet Mesh Group ───
@@ -639,6 +639,24 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     // Add specular shine to ocean if Earth
     if (textures.specular) {
       pMat.roughnessMap = textures.specular;
+    }
+
+    // ─── NASA Satellite Texture Loader Override ───
+    const textureLoader = new THREE.TextureLoader();
+
+    if (planet.slug === "earth") {
+      const realEarthMap = textureLoader.load("/textures/planets/earth_blue_marble.jpg");
+      realEarthMap.colorSpace = THREE.SRGBColorSpace;
+      pMat.map = realEarthMap;
+
+      const realNormalMap = textureLoader.load("/textures/planets/earth_normal_2048.jpg");
+      pMat.normalMap = realNormalMap;
+      pMat.normalScale = new THREE.Vector2(0.85, 0.85);
+
+      const realSpecMap = textureLoader.load("/textures/planets/earth_specular_2048.jpg");
+      pMat.roughnessMap = realSpecMap;
+      pMat.roughness = 0.35;
+      pMat.metalness = 0.1;
     }
 
     const pMesh = new THREE.Mesh(pGeo, pMat);
@@ -697,7 +715,9 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     const moonGroup = new THREE.Group();
     planetGroup.add(moonGroup);
     const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0xc8d6e5, roughness: 0.85 });
+    const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+    moonTexture.colorSpace = THREE.SRGBColorSpace;
+    const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.85 });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     moonMesh.position.set(4.5, 0.3, 0);
     moonGroup.add(moonMesh);

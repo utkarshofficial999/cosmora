@@ -299,6 +299,7 @@ export function SolarSystemCanvas({
 
     // ─── Planets ───
     const ringTex = makeSaturnRingTexture();
+    const textureLoader = new THREE.TextureLoader();
     const planets: {
       pivot: THREE.Group;
       mesh: THREE.Mesh;
@@ -329,6 +330,22 @@ export function SolarSystemCanvas({
       const tex = cfg.makeTexture();
       const geo = new THREE.SphereGeometry(cfg.size, 64, 64);
       const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.1 });
+
+      if (cfg.slug === "earth") {
+        const realEarthMap = textureLoader.load("/textures/planets/earth_blue_marble.jpg");
+        realEarthMap.colorSpace = THREE.SRGBColorSpace;
+        mat.map = realEarthMap;
+
+        const realNormalMap = textureLoader.load("/textures/planets/earth_normal_2048.jpg");
+        mat.normalMap = realNormalMap;
+        mat.normalScale = new THREE.Vector2(0.85, 0.85);
+
+        const realSpecMap = textureLoader.load("/textures/planets/earth_specular_2048.jpg");
+        mat.roughnessMap = realSpecMap;
+        mat.roughness = 0.35;
+        mat.metalness = 0.1;
+      }
+
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.x = cfg.dist;
       mesh.userData = { slug: cfg.slug };
@@ -350,26 +367,31 @@ export function SolarSystemCanvas({
         mesh.add(atmo);
       }
 
-      // Saturn rings
+      // Saturn Realistic Ring System
       if (cfg.hasRings) {
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(cfg.size * 1.35, cfg.size * 2.6, 128),
-          new THREE.MeshBasicMaterial({ map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.88 })
-        );
-        ring.rotation.x = Math.PI / 2.2;
-        mesh.add(ring);
+        const ringGeo = new THREE.RingGeometry(cfg.size * 1.4, cfg.size * 2.5, 64);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0xeab308,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.75,
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2.3;
+        mesh.add(ringMesh);
       }
 
-      // Earth's Moon
+      // Orbiting Moon for Earth
       let moonPivot: THREE.Group | undefined;
       if (cfg.hasMoon) {
         moonPivot = new THREE.Group();
         mesh.add(moonPivot);
-        const moonMesh = new THREE.Mesh(
-          new THREE.SphereGeometry(0.16, 24, 24),
-          new THREE.MeshStandardMaterial({ color: 0xc8d6e5, roughness: 0.9 })
-        );
-        moonMesh.position.x = 1.4;
+        const moonGeo = new THREE.SphereGeometry(0.18, 16, 16);
+        const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+        moonTexture.colorSpace = THREE.SRGBColorSpace;
+        const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.9 });
+        const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+        moonMesh.position.x = 1.3;
         moonPivot.add(moonMesh);
       }
 
