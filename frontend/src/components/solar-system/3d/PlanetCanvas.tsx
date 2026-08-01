@@ -794,6 +794,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       (pMat as THREE.MeshStandardMaterial).roughnessMap = realSpecMap;
       (pMat as THREE.MeshStandardMaterial).roughness = 0.35;
       (pMat as THREE.MeshStandardMaterial).metalness = 0.05;
+    } else if (planet.slug === "mercury") {
+      const realMercuryMap = textureLoader.load("/textures/planets/mercury_2048.jpg");
+      realMercuryMap.colorSpace = THREE.SRGBColorSpace;
+      (pMat as THREE.MeshStandardMaterial).map = realMercuryMap;
+      (pMat as THREE.MeshStandardMaterial).roughness = 0.92;
+      (pMat as THREE.MeshStandardMaterial).metalness = 0.15;
     } else if (planet.slug === "venus") {
       const realVenusMap = textureLoader.load("/textures/planets/venus_2048.jpg");
       realVenusMap.colorSpace = THREE.SRGBColorSpace;
