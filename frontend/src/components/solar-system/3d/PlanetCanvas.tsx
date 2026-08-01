@@ -759,6 +759,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       (pMat as THREE.MeshStandardMaterial).roughnessMap = realSpecMap;
       (pMat as THREE.MeshStandardMaterial).roughness = 0.35;
       (pMat as THREE.MeshStandardMaterial).metalness = 0.05;
+    } else if (planet.slug === "mars") {
+      const realMarsMap = textureLoader.load("/textures/planets/mars_2048.jpg");
+      realMarsMap.colorSpace = THREE.SRGBColorSpace;
+      (pMat as THREE.MeshStandardMaterial).map = realMarsMap;
+      (pMat as THREE.MeshStandardMaterial).roughness = 0.88;
+      (pMat as THREE.MeshStandardMaterial).metalness = 0.04;
     }
 
     const pMesh = new THREE.Mesh(pGeo, pMat);
@@ -825,9 +831,9 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     if (planet.slug !== "sun") {
       const atmoGeo = new THREE.SphereGeometry(radius * 1.022, 64, 64);
       const atmoMat = new THREE.MeshBasicMaterial({
-        color: planet.slug === "earth" ? 0x00d5ff : hexColor,
+        color: planet.slug === "earth" ? 0x00d5ff : planet.slug === "mars" ? 0xd97706 : hexColor,
         transparent: true,
-        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "mercury" ? 0.04 : 0.18,
+        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "mars" ? 0.08 : planet.slug === "mercury" ? 0.04 : 0.18,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
       });
@@ -858,17 +864,39 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       pMesh.add(ringMesh);
     }
 
-    // ─── Orbiting Moon (Only for planets, not the Sun) ───
+    // ─── Orbiting Moons (Only for planets, not the Sun) ───
     const moonGroup = new THREE.Group();
     if (planet.slug !== "sun") {
       planetGroup.add(moonGroup);
-      const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
-      const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
-      moonTexture.colorSpace = THREE.SRGBColorSpace;
-      const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.85 });
-      const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-      moonMesh.position.set(4.5, 0.3, 0);
-      moonGroup.add(moonMesh);
+
+      if (planet.slug === "mars") {
+        const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+        moonTexture.colorSpace = THREE.SRGBColorSpace;
+
+        // Phobos (Larger inner Martian moon)
+        const phobosGeo = new THREE.SphereGeometry(0.18, 16, 16);
+        const phobosMat = new THREE.MeshStandardMaterial({ map: moonTexture, color: 0xc4b2a3, roughness: 0.9 });
+        const phobosMesh = new THREE.Mesh(phobosGeo, phobosMat);
+        phobosMesh.scale.set(1.4, 1.0, 0.85); // Irregular cratered asteroid shape
+        phobosMesh.position.set(3.8, 0.2, 0);
+        moonGroup.add(phobosMesh);
+
+        // Deimos (Smaller outer Martian moon)
+        const deimosGeo = new THREE.SphereGeometry(0.12, 16, 16);
+        const deimosMat = new THREE.MeshStandardMaterial({ map: moonTexture, color: 0x9e8c7c, roughness: 0.95 });
+        const deimosMesh = new THREE.Mesh(deimosGeo, deimosMat);
+        deimosMesh.scale.set(1.2, 0.8, 1.0);
+        deimosMesh.position.set(5.2, -0.4, 0);
+        moonGroup.add(deimosMesh);
+      } else {
+        const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
+        const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+        moonTexture.colorSpace = THREE.SRGBColorSpace;
+        const moonMat = new THREE.MeshStandardMaterial({ map: moonTexture, roughness: 0.85 });
+        const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+        moonMesh.position.set(4.5, 0.3, 0);
+        moonGroup.add(moonMesh);
+      }
     }
 
     // ─── Background Starfield ───
