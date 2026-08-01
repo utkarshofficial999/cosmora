@@ -681,6 +681,29 @@ function makeSunTexture(w = 2048, h = 1024): THREE.CanvasTexture {
   return t;
 }
 
+function makeNeptuneRingTexture(): THREE.CanvasTexture {
+  const c = document.createElement("canvas"); c.width = 2048; c.height = 64;
+  const x = c.getContext("2d")!;
+  const ringBands = [
+    { start: 0.0, end: 0.08, col: "rgba(0,0,0,0)" },
+    { start: 0.08, end: 0.12, col: "rgba(100, 160, 255, 0.4)" }, // Galle Ring
+    { start: 0.12, end: 0.28, col: "rgba(0,0,0,0)" },
+    { start: 0.28, end: 0.32, col: "rgba(140, 180, 255, 0.65)" }, // Le Verrier Ring
+    { start: 0.32, end: 0.48, col: "rgba(90, 130, 220, 0.25)" }, // Lassell Ring
+    { start: 0.48, end: 0.62, col: "rgba(0,0,0,0)" },
+    { start: 0.62, end: 0.68, col: "rgba(180, 210, 255, 0.85)" }, // Adams Ring & Arcs
+    { start: 0.68, end: 0.76, col: "rgba(120, 170, 255, 0.5)" }, // Outer Ring
+    { start: 0.76, end: 1.0, col: "rgba(0,0,0,0)" },
+  ];
+  for (const rb of ringBands) {
+    x.fillStyle = rb.col;
+    x.fillRect(rb.start * 2048, 0, (rb.end - rb.start) * 2048 + 2, 64);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 /* ════════════════════════════════════════════════════════════════
    TEXTURE DISPATCHER
    ════════════════════════════════════════════════════════════════ */
@@ -694,7 +717,7 @@ function getTexturesForPlanet(slug: string) {
     case "jupiter": return { map: makeJupiterTexture() };
     case "saturn":  return { map: makeSaturnTexture(), ring: makeSaturnRingTexture() };
     case "uranus":  return { map: makeUranusTexture() };
-    case "neptune": return { map: makeNeptuneTexture() };
+    case "neptune": return { map: makeNeptuneTexture(), ring: makeNeptuneRingTexture() };
     default:        return { map: makeEarthTexture(), bump: makeEarthBump(), specular: makeEarthSpecularMap(), clouds: makeEarthClouds() };
   }
 }
@@ -818,6 +841,12 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       (pMat as THREE.MeshStandardMaterial).map = realJupiterMap;
       (pMat as THREE.MeshStandardMaterial).roughness = 0.62;
       (pMat as THREE.MeshStandardMaterial).metalness = 0.02;
+    } else if (planet.slug === "neptune") {
+      const realNeptuneMap = textureLoader.load("/textures/planets/neptune_2048.jpg");
+      realNeptuneMap.colorSpace = THREE.SRGBColorSpace;
+      (pMat as THREE.MeshStandardMaterial).map = realNeptuneMap;
+      (pMat as THREE.MeshStandardMaterial).roughness = 0.55;
+      (pMat as THREE.MeshStandardMaterial).metalness = 0.02;
     }
 
     const pMesh = new THREE.Mesh(pGeo, pMat);
@@ -884,18 +913,20 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
     if (planet.slug !== "sun") {
       const atmoGeo = new THREE.SphereGeometry(radius * 1.022, 64, 64);
       const atmoMat = new THREE.MeshBasicMaterial({
-        color: planet.slug === "earth" ? 0x00d5ff : planet.slug === "venus" ? 0xeab308 : planet.slug === "mars" ? 0xd97706 : hexColor,
+        color: planet.slug === "earth" ? 0x00d5ff : planet.slug === "venus" ? 0xeab308 : planet.slug === "mars" ? 0xd97706 : planet.slug === "neptune" ? 0x3b82f6 : hexColor,
         transparent: true,
-        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "venus" ? 0.24 : planet.slug === "mars" ? 0.08 : planet.slug === "mercury" ? 0.04 : 0.18,
+        opacity: planet.slug === "earth" ? 0.12 : planet.slug === "venus" ? 0.24 : planet.slug === "mars" ? 0.08 : planet.slug === "neptune" ? 0.22 : planet.slug === "mercury" ? 0.04 : 0.18,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
       });
       planetGroup.add(new THREE.Mesh(atmoGeo, atmoMat));
     }
 
-    // ─── Saturn Rings ───
-    if (planet.slug === "saturn" && textures.ring) {
-      const ringGeo = new THREE.RingGeometry(radius * 1.3, radius * 2.5, 128);
+    // ─── Planetary Ring Systems (Saturn & Neptune) ───
+    if (textures.ring) {
+      const innerR = planet.slug === "neptune" ? radius * 1.35 : radius * 1.3;
+      const outerR = planet.slug === "neptune" ? radius * 2.4 : radius * 2.5;
+      const ringGeo = new THREE.RingGeometry(innerR, outerR, 128);
       // Map ring radial UVs
       const pos = ringGeo.attributes.position;
       const uv = ringGeo.attributes.uv;
@@ -903,17 +934,17 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
       for (let i = 0; i < pos.count; i++) {
         v3.fromBufferAttribute(pos, i);
         const len = v3.length();
-        (uv as THREE.BufferAttribute).setXY(i, (len - radius * 1.3) / (radius * 1.2), 0.5);
+        (uv as THREE.BufferAttribute).setXY(i, (len - innerR) / (outerR - innerR), 0.5);
       }
       const ringMat = new THREE.MeshBasicMaterial({
         map: textures.ring,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.9,
+        opacity: planet.slug === "neptune" ? 0.75 : 0.9,
         depthWrite: false,
       });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.rotation.x = Math.PI / 2.1;
+      ringMesh.rotation.x = Math.PI / 2.15;
       pMesh.add(ringMesh);
     }
 
@@ -958,6 +989,16 @@ export function PlanetCanvas({ planet }: PlanetCanvasProps) {
         const europaMesh = new THREE.Mesh(europaGeo, europaMat);
         europaMesh.position.set(5.5, -0.2, 0);
         moonGroup.add(europaMesh);
+      } else if (planet.slug === "neptune") {
+        const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
+        moonTexture.colorSpace = THREE.SRGBColorSpace;
+
+        // Triton (Large Retrograde Icy Cryovolcanic Moon)
+        const tritonGeo = new THREE.SphereGeometry(0.28, 32, 32);
+        const tritonMat = new THREE.MeshStandardMaterial({ map: moonTexture, color: 0xdbeafe, roughness: 0.65 });
+        const tritonMesh = new THREE.Mesh(tritonGeo, tritonMat);
+        tritonMesh.position.set(4.8, 0.4, 0);
+        moonGroup.add(tritonMesh);
       } else {
         const moonGeo = new THREE.SphereGeometry(0.3, 32, 32);
         const moonTexture = textureLoader.load("/textures/planets/moon_1024.jpg");
