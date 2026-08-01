@@ -33,6 +33,69 @@ export interface StoryDetail {
 }
 
 const FALLBACK_STORIES: Record<string, StoryDetail> = {
+  "symphony-of-the-void": {
+    id: "symphony-of-the-void",
+    title: "The Symphony of the Void",
+    category: "Cosmic Genesis",
+    difficulty: "Advanced",
+    readTime: "25 min interactive flight",
+    rating: "5.0",
+    views: 48900,
+    likes: 12400,
+    author: "COSMORA Cinematic Universe",
+    publishedDate: "2026-08-01",
+    coverImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000",
+    backgroundTheme: "deep-space",
+    summary: "A cosmic journey from the birth of space to the formation of black holes, the Milky Way, and our Solar System.",
+    relatedPlanetId: "earth",
+    relatedMissionId: "james-webb",
+    chapters: [
+      {
+        id: "act-1",
+        chapterNumber: 1,
+        title: "Act I: The Birth of Space & The First Monsters",
+        subtitle: "The Great Fracture, Inflation & First Black Holes",
+        readTimeMinutes: 6,
+        content: [
+          "The universe erupts from the Primordial Seed. In a fraction of a second during cosmic inflation, space expands faster than light, ripping apart quantum fluctuations into cosmic filaments.",
+          "As matter cools and condenses, gravity collapses the densest primordial gas clouds, creating the first Supermassive Black Holes—the gravitational monsters around which future galaxies will gather.",
+        ],
+      },
+      {
+        id: "act-2",
+        chapterNumber: 2,
+        title: "Act II: Gathering in the Dark",
+        subtitle: "Formation of the Milky Way & Sagittarius A*",
+        readTimeMinutes: 6,
+        content: [
+          "A supermassive black hole pulls gas, dust, and ancient star clusters together. Over billions of years, collisions, chaos, and gravity shape the majestic spiral galaxy we call the Milky Way.",
+          "At its core lies Sagittarius A*, a gargantuan gravitational engine drawing millions of newly ignited stars into swirling orbital arms.",
+        ],
+      },
+      {
+        id: "act-3",
+        chapterNumber: 3,
+        title: "Act III: Stardust and Fire",
+        subtitle: "Creation of the Sun & Solar System",
+        readTimeMinutes: 7,
+        content: [
+          "A nearby supernova triggers the gravitational collapse of a dense solar nebula. At the center, pressure builds until nuclear fusion ignites—the Sun is born.",
+          "In the surrounding protoplanetary accretion disk, dust grains coalesce into planetesimals. Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune emerge in real time.",
+        ],
+      },
+      {
+        id: "act-4",
+        chapterNumber: 4,
+        title: "Act IV: The Legacy",
+        subtitle: "Earth, Atmosphere, ISS & Human Consciousness",
+        readTimeMinutes: 6,
+        content: [
+          "Earth orbits a humble star in a quiet spiral arm. Oceans form, clouds drift, and the atmosphere glows under polar auroras. Life awakens, evolves, and develops self-awareness.",
+          "We build orbiters, look back from space, and realize: 'We are the universe becoming conscious of itself.'",
+        ],
+      },
+    ],
+  },
   "apollo-11-legacy": {
     id: "apollo-11-legacy",
     title: "Apollo 11: The First Footsteps",
