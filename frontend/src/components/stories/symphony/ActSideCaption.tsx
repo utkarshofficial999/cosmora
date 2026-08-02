@@ -1,14 +1,16 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Clock, Compass, Activity, Radio } from "lucide-react";
+import { Sparkles, Clock, Compass, Activity, Radio, Pause, Play } from "lucide-react";
 import { ACT_NAMES } from "./SymphonyTimelineBar";
 
 interface ActSideCaptionProps {
   activeAct: number;
+  isAutoPlay?: boolean;
+  onToggleAutoPlay?: () => void;
 }
 
-export function ActSideCaption({ activeAct }: ActSideCaptionProps) {
+export function ActSideCaption({ activeAct, isAutoPlay = true, onToggleAutoPlay }: ActSideCaptionProps) {
   const actNarratives = [
     {
       time: "13.8 Billion Years Ago",
@@ -64,16 +66,34 @@ export function ActSideCaption({ activeAct }: ActSideCaptionProps) {
 
   return (
     <div className="fixed top-28 left-6 z-30 w-80 md:w-96 max-w-full glass-panel rounded-3xl p-5 md:p-6 border border-purple-500/40 bg-slate-950/80 backdrop-blur-2xl shadow-2xl shadow-purple-950/80 animate-fade-in transition-all duration-500">
-      {/* Top Header Badge */}
+      {/* Top Header Badge & Pause Button */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/90 border border-purple-500/40 text-purple-300 text-[10px] font-mono font-bold tracking-wider uppercase">
           <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
           {current.badge}
         </span>
-        <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
-          <Clock className="w-3 h-3 text-purple-400" />
-          {current.time}
-        </span>
+        {onToggleAutoPlay && (
+          <button
+            onClick={onToggleAutoPlay}
+            className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer ${
+              isAutoPlay
+                ? "bg-purple-600/30 border border-purple-400 text-purple-200"
+                : "bg-amber-500/30 border border-amber-400 text-amber-200"
+            }`}
+          >
+            {isAutoPlay ? (
+              <>
+                <Pause className="w-3 h-3 text-cyan-400" />
+                <span>Pause Tour</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-3 h-3 text-amber-300" />
+                <span>Resume Tour</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Title Phase */}

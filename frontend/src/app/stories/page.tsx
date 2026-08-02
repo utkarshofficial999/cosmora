@@ -83,7 +83,11 @@ export default function StoriesPage() {
       {isPure3D ? (
         <>
           {/* Synchronized 3D Side Caption Subtitles & Telemetry */}
-          <ActSideCaption activeAct={activeAct} />
+          <ActSideCaption
+            activeAct={activeAct}
+            isAutoPlay={isAutoPlay}
+            onToggleAutoPlay={() => setIsAutoPlay(!isAutoPlay)}
+          />
           {/* Top Minimal Holographic HUD Header with 4K Auto Progress Bar */}
           <header className="fixed top-6 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-2xl">
             <div className="glass-panel rounded-2xl p-4 border border-purple-500/40 bg-slate-950/85 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 relative overflow-hidden flex items-center justify-between gap-4">

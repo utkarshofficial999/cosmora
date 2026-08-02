@@ -177,57 +177,78 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
     act2Group.add(new THREE.Mesh(sagAGeo, sagAMat));
 
     // ════════════════════════════════════════════════════════════════
-    // ACT III: STARDUST AND FIRE — SOLAR SYSTEM CREATION
+    // ACT III: STARDUST AND FIRE — REAL 4K NASA SATELLITE SOLAR SYSTEM
     // ════════════════════════════════════════════════════════════════
     const act3Group = new THREE.Group();
     act3Group.position.set(0, 0, -100);
     scene.add(act3Group);
 
-    // Glowing Central Sun
+    // Photorealistic 4K Sun Core with Real Solar Satellite Map
+    const sunMap = textureLoader.load("/textures/planets/sun.jpg");
+    sunMap.colorSpace = THREE.SRGBColorSpace;
     const sunGeo = new THREE.SphereGeometry(2.0, 64, 64);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    const sunMat = new THREE.MeshBasicMaterial({ map: sunMap });
     const sunMesh = new THREE.Mesh(sunGeo, sunMat);
     act3Group.add(sunMesh);
 
-    // Solar Corona Atmosphere
-    const sunCoronaGeo = new THREE.SphereGeometry(2.3, 32, 32);
-    const sunCoronaMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.4, side: THREE.BackSide, blending: THREE.AdditiveBlending });
-    const sunCorona = new THREE.Mesh(sunCoronaGeo, sunCoronaMat);
-    act3Group.add(sunCorona);
+    // Multi-Layered Solar Corona Flare Halos
+    const sunCoronaInner = new THREE.Mesh(
+      new THREE.SphereGeometry(2.15, 64, 64),
+      new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5, side: THREE.BackSide, blending: THREE.AdditiveBlending })
+    );
+    act3Group.add(sunCoronaInner);
 
-    // Protoplanetary Accretion Disk Particles
-    const accCount = 3000;
+    const sunCoronaOuter = new THREE.Mesh(
+      new THREE.SphereGeometry(2.4, 64, 64),
+      new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.35, side: THREE.BackSide, blending: THREE.AdditiveBlending })
+    );
+    act3Group.add(sunCoronaOuter);
+
+    // Protoplanetary Accretion Dust Disk
+    const accCount = 4000;
     const accPos = new Float32Array(accCount * 3);
     for (let i = 0; i < accCount; i++) {
-      const r = 2.6 + Math.random() * 8.5;
+      const r = 2.8 + Math.random() * 11.5;
       const th = Math.random() * Math.PI * 2;
       accPos[i * 3] = Math.cos(th) * r;
-      accPos[i * 3 + 1] = (Math.random() - 0.5) * 0.2;
+      accPos[i * 3 + 1] = (Math.random() - 0.5) * 0.25;
       accPos[i * 3 + 2] = Math.sin(th) * r;
     }
     const accGeo = new THREE.BufferGeometry();
     accGeo.setAttribute("position", new THREE.BufferAttribute(accPos, 3));
-    const accMat = new THREE.PointsMaterial({ size: 0.08, color: 0xff7722, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
+    const accMat = new THREE.PointsMaterial({ size: 0.09, color: 0xff8833, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
     const accPoints = new THREE.Points(accGeo, accMat);
     act3Group.add(accPoints);
 
-    // Orbiting Protoplanets
-    const planetData = [
-      { name: "Mercury", r: 3.2, size: 0.18, color: 0xa1a1aa },
-      { name: "Venus", r: 4.2, size: 0.32, color: 0xeab308 },
-      { name: "Earth", r: 5.4, size: 0.36, color: 0x38bdf8 },
-      { name: "Mars", r: 6.6, size: 0.24, color: 0xef4444 },
-      { name: "Jupiter", r: 8.2, size: 0.7, color: 0xf97316 },
-      { name: "Saturn", r: 9.8, size: 0.58, color: 0xfde047 },
+    // Real NASA Satellite Textured Planets
+    const planetConfigs = [
+      { name: "Mercury", r: 3.4, size: 0.22, tex: "/textures/planets/mercury_2048.jpg", roughness: 0.9 },
+      { name: "Venus", r: 4.6, size: 0.34, tex: "/textures/planets/venus_2048.jpg", roughness: 0.7 },
+      { name: "Earth", r: 6.0, size: 0.38, tex: "/textures/planets/earth_blue_marble.jpg", roughness: 0.35 },
+      { name: "Mars", r: 7.4, size: 0.28, tex: "/textures/planets/mars_2048.jpg", roughness: 0.88 },
+      { name: "Jupiter", r: 9.2, size: 0.75, tex: "/textures/planets/jupiter_2048.jpg", roughness: 0.6 },
+      { name: "Saturn", r: 11.4, size: 0.65, tex: "/textures/planets/jupiter_2048.jpg", roughness: 0.6, isSaturn: true },
+      { name: "Neptune", r: 13.5, size: 0.52, tex: "/textures/planets/neptune_2048.jpg", roughness: 0.55 },
     ];
+
     const planetMeshes: THREE.Mesh[] = [];
-    planetData.forEach((pd, idx) => {
-      const pMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(pd.size, 32, 32),
-        new THREE.MeshStandardMaterial({ color: pd.color, roughness: 0.5 })
-      );
-      const angle = (idx * Math.PI * 2) / planetData.length;
-      pMesh.position.set(Math.cos(angle) * pd.r, 0, Math.sin(angle) * pd.r);
+    planetConfigs.forEach((pc, idx) => {
+      const pTex = textureLoader.load(pc.tex);
+      pTex.colorSpace = THREE.SRGBColorSpace;
+      const pMat = new THREE.MeshStandardMaterial({ map: pTex, roughness: pc.roughness });
+      const pMesh = new THREE.Mesh(new THREE.SphereGeometry(pc.size, 32, 32), pMat);
+
+      if (pc.isSaturn) {
+        // Saturn 3D Rings
+        const ringGeo = new THREE.RingGeometry(pc.size * 1.3, pc.size * 2.4, 64);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xfde047, side: THREE.DoubleSide, transparent: true, opacity: 0.75 });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2.2;
+        pMesh.add(ringMesh);
+      }
+
+      const angle = (idx * Math.PI * 2) / planetConfigs.length;
+      pMesh.position.set(Math.cos(angle) * pc.r, 0, Math.sin(angle) * pc.r);
       act3Group.add(pMesh);
       planetMeshes.push(pMesh);
     });
@@ -406,12 +427,12 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
 
       act3Group.rotation.x = dragRotX;
       act3Group.rotation.y = dragRotY;
-      sunCorona.scale.setScalar(1 + Math.sin(time * 3) * 0.04);
+      sunCoronaInner.scale.setScalar(1 + Math.sin(time * 3) * 0.04);
       accPoints.rotation.y += delta * 0.2;
       planetMeshes.forEach((pm, idx) => {
-        const pd = planetData[idx];
-        const angle = (idx * Math.PI * 2) / planetData.length + time * (0.3 / (idx + 1));
-        pm.position.set(Math.cos(angle) * pd.r, 0, Math.sin(angle) * pd.r);
+        const pc = planetConfigs[idx];
+        const angle = (idx * Math.PI * 2) / planetConfigs.length + time * (0.3 / (idx + 1));
+        pm.position.set(Math.cos(angle) * pc.r, 0, Math.sin(angle) * pc.r);
         pm.rotation.y += delta * 0.8;
       });
 
