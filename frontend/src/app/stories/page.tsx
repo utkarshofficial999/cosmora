@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Bell, Sparkles, Eye, EyeOff, Volume2, VolumeX, Maximize, ChevronLeft, ChevronRight, Play, Pause, RotateCw } from "lucide-react";
+import { ActSideCaption } from "@/components/stories/symphony/ActSideCaption";
 import { UniverseCanvas } from "@/components/stories/symphony/UniverseCanvas";
 import { SymphonyHero } from "@/components/stories/symphony/SymphonyHero";
 import { SymphonyTimelineBar, ACT_NAMES } from "@/components/stories/symphony/SymphonyTimelineBar";
@@ -77,10 +78,12 @@ export default function StoriesPage() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* PURE 3D STORY MODE HUD (AUTOMATIC 4K CINEMA — NO TEXT BOXES) */}
+      {/* PURE 3D STORY MODE HUD (AUTOMATIC 4K CINEMA & 3D SIDE CAPTIONS) */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {isPure3D ? (
         <>
+          {/* Synchronized 3D Side Caption Subtitles & Telemetry */}
+          <ActSideCaption activeAct={activeAct} />
           {/* Top Minimal Holographic HUD Header with 4K Auto Progress Bar */}
           <header className="fixed top-6 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-2xl">
             <div className="glass-panel rounded-2xl p-4 border border-purple-500/40 bg-slate-950/85 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 relative overflow-hidden flex items-center justify-between gap-4">

@@ -53,60 +53,84 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
     scene.add(starField);
 
     // ════════════════════════════════════════════════════════════════
-    // ACT I: THE GREAT FRACTURE & BLACK HOLE GROUP
+    // ACT I: THE GREAT FRACTURE & 4K GRAVITATIONAL LENSING BLACK HOLE
     // ════════════════════════════════════════════════════════════════
     const act1Group = new THREE.Group();
     scene.add(act1Group);
 
-    // Big Bang Particles
-    const bigBangCount = 3000;
+    // 4K Big Bang Explosion Particles (6,000 fragments with color gradients)
+    const bigBangCount = 6000;
     const bbPos = new Float32Array(bigBangCount * 3);
-    const bbVels = new Float32Array(bigBangCount * 3);
+    const bbColors = new Float32Array(bigBangCount * 3);
     for (let i = 0; i < bigBangCount; i++) {
-      const dir = new THREE.Vector3(
-        (Math.random() - 0.5) * 2,
-        (Math.random() - 0.5) * 2,
-        (Math.random() - 0.5) * 2
-      ).normalize();
-      const speed = 0.5 + Math.random() * 4;
-      bbVels[i * 3] = dir.x * speed;
-      bbVels[i * 3 + 1] = dir.y * speed;
-      bbVels[i * 3 + 2] = dir.z * speed;
-      bbPos[i * 3] = dir.x * (0.1 + Math.random() * 2);
-      bbPos[i * 3 + 1] = dir.y * (0.1 + Math.random() * 2);
-      bbPos[i * 3 + 2] = dir.z * (0.1 + Math.random() * 2);
+      const r = 0.2 + Math.pow(Math.random(), 2) * 14;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(Math.random() * 2 - 1);
+      bbPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      bbPos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+      bbPos[i * 3 + 2] = r * Math.cos(ph);
+
+      if (r < 3.0) { bbColors[i*3] = 0.95; bbColors[i*3+1] = 0.3; bbColors[i*3+2] = 0.9; } // Bright Magenta
+      else if (r < 7.0) { bbColors[i*3] = 0.6; bbColors[i*3+1] = 0.2; bbColors[i*3+2] = 1.0; } // Purple
+      else { bbColors[i*3] = 0.2; bbColors[i*3+1] = 0.7; bbColors[i*3+2] = 1.0; } // Cyan
     }
     const bbGeo = new THREE.BufferGeometry();
     bbGeo.setAttribute("position", new THREE.BufferAttribute(bbPos, 3));
-    const bbMat = new THREE.PointsMaterial({ size: 0.15, color: 0xec4899, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending });
+    bbGeo.setAttribute("color", new THREE.BufferAttribute(bbColors, 3));
+    const bbMat = new THREE.PointsMaterial({ size: 0.12, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
     const bbPoints = new THREE.Points(bbGeo, bbMat);
     act1Group.add(bbPoints);
 
-    // Primordial Supermassive Black Hole Event Horizon
+    // Primordial Supermassive Black Hole Event Horizon (Pure Pitch Black)
     const bhCoreGeo = new THREE.SphereGeometry(1.8, 64, 64);
     const bhCoreMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const bhCore = new THREE.Mesh(bhCoreGeo, bhCoreMat);
     act1Group.add(bhCore);
 
-    // Gravitational Lensing Accretion Disk Ring
-    const bhDiskGeo = new THREE.RingGeometry(2.0, 4.8, 128);
-    const bhDiskMat = new THREE.MeshBasicMaterial({
-      color: 0xa855f7,
-      side: THREE.DoubleSide,
+    // Blinding Photon Sphere Ring (Event Horizon Glow Ring)
+    const photonSphereGeo = new THREE.SphereGeometry(1.86, 64, 64);
+    const photonSphereMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
       transparent: true,
       opacity: 0.85,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+    });
+    act1Group.add(new THREE.Mesh(photonSphereGeo, photonSphereMat));
+
+    // Primary Accretion Disk (Interstellar-style horizontal disk)
+    const bhDiskGeo = new THREE.RingGeometry(2.0, 5.5, 128);
+    const bhDiskMat = new THREE.MeshBasicMaterial({
+      color: 0xc084fc,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
     });
     const bhDisk = new THREE.Mesh(bhDiskGeo, bhDiskMat);
-    bhDisk.rotation.x = Math.PI / 2.5;
+    bhDisk.rotation.x = Math.PI / 2.3;
     act1Group.add(bhDisk);
 
-    // Lensing Halo Outer Ring
-    const bhHaloGeo = new THREE.SphereGeometry(2.2, 64, 64);
-    const bhHaloMat = new THREE.MeshBasicMaterial({
-      color: 0x3b82f6,
+    // Warped Vertical Lensing Disk (Gravitational Lensing Light Bend Ring around Y Axis)
+    const bhLensingGeo = new THREE.RingGeometry(2.0, 5.5, 128);
+    const bhLensingMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+    });
+    const bhLensingDisk = new THREE.Mesh(bhLensingGeo, bhLensingMat);
+    bhLensingDisk.rotation.y = Math.PI / 2;
+    bhLensingDisk.rotation.x = Math.PI / 3;
+    act1Group.add(bhLensingDisk);
+
+    // Volumetric Gravitational Distortion Shell
+    const bhHaloGeo = new THREE.SphereGeometry(2.4, 64, 64);
+    const bhHaloMat = new THREE.MeshBasicMaterial({
+      color: 0xa855f7,
+      transparent: true,
+      opacity: 0.3,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
     });
