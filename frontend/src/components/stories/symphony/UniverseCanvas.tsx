@@ -287,6 +287,34 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
     handleResize();
     window.addEventListener("resize", handleResize);
 
+    // ─── Pointer Drag Orbit Rotation ───
+    let isDragging = false;
+    let prevMouse = { x: 0, y: 0 };
+    let dragRotX = 0;
+    let dragRotY = 0;
+
+    const onPointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      prevMouse = { x: e.clientX, y: e.clientY };
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevMouse.x;
+      const dy = e.clientY - prevMouse.y;
+      dragRotY += dx * 0.004;
+      dragRotX += dy * 0.004;
+      prevMouse = { x: e.clientX, y: e.clientY };
+    };
+
+    const onPointerUp = () => {
+      isDragging = false;
+    };
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
     // ─── Target Camera Trajectories for Acts ───
     const targetCameraPos = [
       new THREE.Vector3(0, 1.5, 12),    // Act I: Black Hole
@@ -320,15 +348,17 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
       currentLookAt.lerp(targetLook, 0.04);
       camera.lookAt(currentLookAt);
 
-      // Act I Animations: Black Hole & Big Bang expansion
+      // Interactive rotation
+      act1Group.rotation.x = dragRotX;
+      act1Group.rotation.y = dragRotY + time * 0.08;
       bhDisk.rotation.z += delta * 0.4;
-      act1Group.rotation.y += delta * 0.08;
 
-      // Act II Animations: Galaxy Rotation
+      act2Group.rotation.x = dragRotX;
+      act2Group.rotation.y = dragRotY + time * 0.05;
       galaxyMesh.rotation.y += delta * 0.15;
-      act2Group.rotation.y += delta * 0.05;
 
-      // Act III Animations: Sun Corona & Orbiting Protoplanets
+      act3Group.rotation.x = dragRotX;
+      act3Group.rotation.y = dragRotY;
       sunCorona.scale.setScalar(1 + Math.sin(time * 3) * 0.04);
       accPoints.rotation.y += delta * 0.2;
       planetMeshes.forEach((pm, idx) => {
@@ -338,7 +368,8 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
         pm.rotation.y += delta * 0.8;
       });
 
-      // Act IV Animations: Earth Rotation & Moon Orbit
+      act4Group.rotation.x = dragRotX;
+      act4Group.rotation.y = dragRotY;
       earthMesh.rotation.y += delta * 0.12;
       cloudMesh.rotation.y += delta * 0.15;
       moonPivot.rotation.y += delta * 0.25;
@@ -351,6 +382,9 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
 
     return () => {
       cancelAnimationFrame(rafId);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("resize", handleResize);
       renderer.dispose();
     };
