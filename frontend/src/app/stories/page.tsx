@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Bell, Sparkles, Eye, EyeOff, Volume2, VolumeX, Maximize, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { Search, Bell, Sparkles, Eye, EyeOff, Volume2, VolumeX, Maximize, ChevronLeft, ChevronRight, Play, Pause, RotateCw } from "lucide-react";
 import { UniverseCanvas } from "@/components/stories/symphony/UniverseCanvas";
 import { SymphonyHero } from "@/components/stories/symphony/SymphonyHero";
 import { SymphonyTimelineBar, ACT_NAMES } from "@/components/stories/symphony/SymphonyTimelineBar";
@@ -13,13 +13,40 @@ import { TrailerModal } from "@/components/stories/symphony/TrailerModal";
 
 export default function StoriesPage() {
   const [activeAct, setActiveAct] = useState(0); // 0 = Act I, 1 = Act II, 2 = Act III, 3 = Act IV
-  const [isPure3D, setIsPure3D] = useState(true); // DEFAULT TO TRUE so user sees ONLY 3D story!
+  const [isPure3D, setIsPure3D] = useState(true); // DEFAULT TO PURE 3D (ZERO TEXT BOXES)
+  const [isAutoPlay, setIsAutoPlay] = useState(true); // AUTOMATIC CONTINUOUS SPACE FLIGHT!
+  const [autoProgress, setAutoProgress] = useState(0);
+
   const [selectedModalAct, setSelectedModalAct] = useState<number | null>(null);
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [isNarrationOn, setIsNarrationOn] = useState(true);
 
+  // ─── Automatic Space Flight Tour Timer ───
+  useEffect(() => {
+    if (!isAutoPlay) return;
+
+    const intervalMs = 100;
+    const totalMs = 10000; // 10 seconds per Act world
+    let elapsed = 0;
+
+    const timer = setInterval(() => {
+      elapsed += intervalMs;
+      const pct = (elapsed / totalMs) * 100;
+      setAutoProgress(pct);
+
+      if (elapsed >= totalMs) {
+        elapsed = 0;
+        setAutoProgress(0);
+        setActiveAct((prev) => (prev + 1) % 4);
+      }
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }, [isAutoPlay, activeAct]);
+
   const handleSelectAct = (index: number) => {
     setActiveAct(index);
+    setAutoProgress(0);
   };
 
   const handleExploreAct = (index: number) => {
@@ -30,6 +57,8 @@ export default function StoriesPage() {
   const handleBeginJourney = () => {
     setActiveAct(0);
     setIsPure3D(true);
+    setIsAutoPlay(true);
+    setAutoProgress(0);
   };
 
   const handleToggleFullscreen = () => {
@@ -42,52 +71,77 @@ export default function StoriesPage() {
 
   return (
     <div className="relative min-h-screen text-slate-100 bg-slate-950 overflow-hidden font-sans selection:bg-purple-500/30">
-      {/* ─── 3D Universe WebGL Canvas (Click & Drag Interactive!) ─── */}
+      {/* ─── 4K 3D Universe WebGL Canvas (Click & Drag Interactive!) ─── */}
       <div className={`fixed inset-0 z-0 ${isPure3D ? "pointer-events-auto cursor-grab active:cursor-grabbing" : "pointer-events-none"}`}>
         <UniverseCanvas activeAct={activeAct} className="w-full h-full" />
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* PURE 3D STORY MODE HUD (NO TEXT OVERLAYS & NO TEXT BOXES) */}
+      {/* PURE 3D STORY MODE HUD (AUTOMATIC 4K CINEMA — NO TEXT BOXES) */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {isPure3D ? (
         <>
-          {/* Top Minimal Holographic HUD Header */}
+          {/* Top Minimal Holographic HUD Header with 4K Auto Progress Bar */}
           <header className="fixed top-6 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-2xl">
-            <div className="glass-panel rounded-2xl px-6 py-3 border border-purple-500/40 bg-slate-950/80 backdrop-blur-xl shadow-2xl shadow-purple-950/50 flex items-center justify-between gap-4">
+            <div className="glass-panel rounded-2xl p-4 border border-purple-500/40 bg-slate-950/85 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 relative overflow-hidden flex items-center justify-between gap-4">
+              {/* Auto Transition Progress Bar Filler */}
+              {isAutoPlay && (
+                <div
+                  className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-400 to-blue-500 transition-all duration-100 ease-linear"
+                  style={{ width: `${autoProgress}%` }}
+                />
+              )}
+
               <Link href="/" className="flex items-center gap-2 group">
                 <div className="w-8 h-8 rounded-xl btn-gradient-purple flex items-center justify-center shadow-md shadow-purple-500/30">
-                  <Sparkles className="w-4 h-4 text-white" />
+                  <Sparkles className="w-4 h-4 text-white animate-spin" />
                 </div>
-                <span className="text-sm font-black text-white tracking-wider font-display hidden sm:inline">COSMORA 3D</span>
+                <span className="text-sm font-black text-white tracking-wider font-display hidden sm:inline">COSMORA 4K</span>
               </Link>
 
               {/* Active Act Title Display */}
               <div className="text-center">
-                <div className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-widest">
-                  ACT {ACT_NAMES[activeAct].number} OF IV
+                <div className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  ACT {ACT_NAMES[activeAct].number} OF IV — {isAutoPlay ? "AUTO CINEMA TOUR" : "MANUAL FLIGHT"}
                 </div>
-                <div className="text-sm font-extrabold text-white font-display tracking-tight">
+                <div className="text-sm md:text-base font-extrabold text-white font-display tracking-tight">
                   {ACT_NAMES[activeAct].title}
                 </div>
               </div>
 
-              {/* Show Cards Toggle Button */}
-              <button
-                onClick={() => setIsPure3D(false)}
-                className="px-3 py-1.5 rounded-xl glass-button text-xs font-bold text-slate-300 hover:text-white border border-white/10 flex items-center gap-1.5 cursor-pointer"
-                title="Show Text Cards & UI"
-              >
-                <Eye className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="hidden sm:inline">Cards UI</span>
-              </button>
+              {/* Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsAutoPlay(!isAutoPlay)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isAutoPlay
+                      ? "bg-purple-600/30 border border-purple-400 text-purple-200 shadow-md shadow-purple-500/20"
+                      : "glass-button border-white/10 text-slate-400 hover:text-white"
+                  }`}
+                  title="Toggle Automatic Space Tour"
+                >
+                  {isAutoPlay ? <Pause className="w-3.5 h-3.5 text-cyan-400" /> : <Play className="w-3.5 h-3.5 text-slate-300" />}
+                  <span className="hidden sm:inline">{isAutoPlay ? "Auto ON" : "Auto OFF"}</span>
+                </button>
+
+                <button
+                  onClick={() => setIsPure3D(false)}
+                  className="px-3 py-1.5 rounded-xl glass-button text-xs font-bold text-slate-300 hover:text-white border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                  title="Show Cards UI"
+                >
+                  <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="hidden sm:inline">Cards</span>
+                </button>
+              </div>
             </div>
           </header>
 
-          {/* Floating Instructions Helper Badge */}
+          {/* Floating Helper Pill */}
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-            <div className="px-4 py-1.5 rounded-full bg-slate-950/60 border border-white/10 text-[11px] font-mono text-slate-400 backdrop-blur-md animate-pulse">
-              ✦ Drag mouse / touch screen to orbit 3D camera
+            <div className="px-4 py-1.5 rounded-full bg-slate-950/70 border border-white/10 text-[11px] font-mono text-slate-300 backdrop-blur-md flex items-center gap-2">
+              <RotateCw className="w-3 h-3 text-cyan-400 animate-spin" />
+              <span>4K Automatic Space Flight • Drag to rotate camera freely</span>
             </div>
           </div>
 
@@ -95,7 +149,7 @@ export default function StoriesPage() {
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-3xl glass-panel rounded-2xl p-3 border border-purple-500/40 bg-slate-950/90 backdrop-blur-2xl shadow-2xl shadow-purple-950/80 flex items-center justify-between gap-3">
             {/* Previous Act Arrow */}
             <button
-              onClick={() => setActiveAct((prev) => Math.max(0, prev - 1))}
+              onClick={() => handleSelectAct(Math.max(0, activeAct - 1))}
               disabled={activeAct === 0}
               className="p-2.5 rounded-xl glass-button text-slate-300 disabled:opacity-30 cursor-pointer"
             >
@@ -109,7 +163,7 @@ export default function StoriesPage() {
                 return (
                   <button
                     key={act.number}
-                    onClick={() => setActiveAct(index)}
+                    onClick={() => handleSelectAct(index)}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
                       isActive
                         ? "bg-purple-600 border-purple-400 text-white shadow-lg shadow-purple-500/40 ring-1 ring-purple-300/50 scale-105"
@@ -124,7 +178,7 @@ export default function StoriesPage() {
 
             {/* Next Act Arrow */}
             <button
-              onClick={() => setActiveAct((prev) => Math.min(3, prev + 1))}
+              onClick={() => handleSelectAct(Math.min(3, activeAct + 1))}
               disabled={activeAct === 3}
               className="p-2.5 rounded-xl glass-button text-slate-300 disabled:opacity-30 cursor-pointer"
             >
@@ -155,7 +209,7 @@ export default function StoriesPage() {
         </>
       ) : (
         /* ════════════════════════════════════════════════════════════════ */
-        /* STANDARD OVERLAY LAYOUT WITH HEADER & CARDS UI */
+        /* STANDARD OVERLAY LAYOUT WITH CARDS UI */
         /* ════════════════════════════════════════════════════════════════ */
         <>
           {/* Header Navigation Bar */}

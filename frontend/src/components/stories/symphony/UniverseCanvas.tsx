@@ -315,6 +315,24 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
 
+    // Relativistic Jet Beams (Black Hole Top & Bottom)
+    const jetGeo = new THREE.CylinderGeometry(0.08, 1.2, 16, 32, 1, true);
+    const jetMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.65,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    });
+    const jetTop = new THREE.Mesh(jetGeo, jetMat);
+    jetTop.position.set(0, 8, 0);
+    act1Group.add(jetTop);
+
+    const jetBottom = new THREE.Mesh(jetGeo, jetMat);
+    jetBottom.position.set(0, -8, 0);
+    jetBottom.rotation.z = Math.PI;
+    act1Group.add(jetBottom);
+
     // ─── Target Camera Trajectories for Acts ───
     const targetCameraPos = [
       new THREE.Vector3(0, 1.5, 12),    // Act I: Black Hole
@@ -340,18 +358,23 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
       const delta = clock.getDelta();
       const time = clock.getElapsedTime();
 
-      // Lerp camera toward target Act position
-      const targetPos = targetCameraPos[activeAct] || targetCameraPos[0];
+      // Automatic Cinematic Camera Drift (Drifting smoothly around active world)
+      const basePos = targetCameraPos[activeAct] || targetCameraPos[0];
       const targetLook = targetLookAtPos[activeAct] || targetLookAtPos[0];
 
-      camera.position.lerp(targetPos, 0.04);
+      const autoDriftX = Math.sin(time * 0.2) * 1.2;
+      const autoDriftY = Math.cos(time * 0.15) * 0.6;
+      const autoCamPos = new THREE.Vector3(basePos.x + autoDriftX, basePos.y + autoDriftY, basePos.z);
+
+      camera.position.lerp(autoCamPos, 0.04);
       currentLookAt.lerp(targetLook, 0.04);
       camera.lookAt(currentLookAt);
 
-      // Interactive rotation
+      // Interactive rotation + Auto rotation
       act1Group.rotation.x = dragRotX;
       act1Group.rotation.y = dragRotY + time * 0.08;
       bhDisk.rotation.z += delta * 0.4;
+      jetTop.scale.set(1 + Math.sin(time * 4) * 0.1, 1, 1 + Math.sin(time * 4) * 0.1);
 
       act2Group.rotation.x = dragRotX;
       act2Group.rotation.y = dragRotY + time * 0.05;
