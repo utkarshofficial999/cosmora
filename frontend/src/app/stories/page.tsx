@@ -45,6 +45,18 @@ export default function StoriesPage() {
     return () => clearInterval(timer);
   }, [isAutoPlay, activeAct]);
 
+  // ─── Keyboard Spacebar Pause/Play Shortcut Handler ───
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsAutoPlay((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleSelectAct = (index: number) => {
     setActiveAct(index);
     setAutoProgress(0);
@@ -78,7 +90,7 @@ export default function StoriesPage() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* PURE 3D STORY MODE HUD (AUTOMATIC 4K CINEMA & 3D SIDE CAPTIONS) */}
+      {/* PURE 3D STORY MODE HUD (AUTOMATIC 4K CINEMA & PROMINENT PAUSE BUTTON) */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {isPure3D ? (
         <>
@@ -88,6 +100,7 @@ export default function StoriesPage() {
             isAutoPlay={isAutoPlay}
             onToggleAutoPlay={() => setIsAutoPlay(!isAutoPlay)}
           />
+
           {/* Top Minimal Holographic HUD Header with 4K Auto Progress Bar */}
           <header className="fixed top-6 left-1/2 -translate-x-1/2 z-30 w-11/12 max-w-2xl">
             <div className="glass-panel rounded-2xl p-4 border border-purple-500/40 bg-slate-950/85 backdrop-blur-2xl shadow-2xl shadow-purple-950/60 relative overflow-hidden flex items-center justify-between gap-4">
@@ -109,32 +122,41 @@ export default function StoriesPage() {
               {/* Active Act Title Display */}
               <div className="text-center">
                 <div className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  ACT {ACT_NAMES[activeAct].number} OF IV — {isAutoPlay ? "AUTO CINEMA TOUR" : "MANUAL FLIGHT"}
+                  <span className={`w-1.5 h-1.5 rounded-full ${isAutoPlay ? "bg-cyan-400 animate-ping" : "bg-amber-400"}`} />
+                  ACT {ACT_NAMES[activeAct].number} OF IV — {isAutoPlay ? "AUTO CINEMA TOUR" : "PAUSED (FREE EXPLORE)"}
                 </div>
                 <div className="text-sm md:text-base font-extrabold text-white font-display tracking-tight">
                   {ACT_NAMES[activeAct].title}
                 </div>
               </div>
 
-              {/* Controls */}
+              {/* Prominent Main Pause / Play Button */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsAutoPlay(!isAutoPlay)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold font-mono flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
                     isAutoPlay
-                      ? "bg-purple-600/30 border border-purple-400 text-purple-200 shadow-md shadow-purple-500/20"
-                      : "glass-button border-white/10 text-slate-400 hover:text-white"
+                      ? "bg-purple-600/40 border border-purple-400 text-purple-200 shadow-purple-500/30 hover:bg-purple-600/60"
+                      : "bg-amber-500/40 border border-amber-400 text-amber-100 shadow-amber-500/30 hover:bg-amber-500/60 ring-2 ring-amber-400/50"
                   }`}
-                  title="Toggle Automatic Space Tour"
+                  title="Press Spacebar to Pause/Resume"
                 >
-                  {isAutoPlay ? <Pause className="w-3.5 h-3.5 text-cyan-400" /> : <Play className="w-3.5 h-3.5 text-slate-300" />}
-                  <span className="hidden sm:inline">{isAutoPlay ? "Auto ON" : "Auto OFF"}</span>
+                  {isAutoPlay ? (
+                    <>
+                      <Pause className="w-4 h-4 text-cyan-400" />
+                      <span>⏸ PAUSE</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 text-amber-300 fill-amber-300" />
+                      <span>▶ RESUME</span>
+                    </>
+                  )}
                 </button>
 
                 <button
                   onClick={() => setIsPure3D(false)}
-                  className="px-3 py-1.5 rounded-xl glass-button text-xs font-bold text-slate-300 hover:text-white border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-2 rounded-xl glass-button text-xs font-bold text-slate-300 hover:text-white border border-white/10 flex items-center gap-1.5 cursor-pointer"
                   title="Show Cards UI"
                 >
                   <Eye className="w-3.5 h-3.5 text-cyan-400" />
@@ -146,9 +168,13 @@ export default function StoriesPage() {
 
           {/* Floating Helper Pill */}
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-            <div className="px-4 py-1.5 rounded-full bg-slate-950/70 border border-white/10 text-[11px] font-mono text-slate-300 backdrop-blur-md flex items-center gap-2">
-              <RotateCw className="w-3 h-3 text-cyan-400 animate-spin" />
-              <span>4K Automatic Space Flight • Drag to rotate camera freely</span>
+            <div className={`px-4 py-1.5 rounded-full border text-[11px] font-mono backdrop-blur-md flex items-center gap-2 transition-colors ${
+              isAutoPlay
+                ? "bg-slate-950/70 border-white/10 text-slate-300"
+                : "bg-amber-950/80 border-amber-500/50 text-amber-200 shadow-lg shadow-amber-950/50 animate-pulse"
+            }`}>
+              <RotateCw className={`w-3 h-3 ${isAutoPlay ? "text-cyan-400 animate-spin" : "text-amber-400"}`} />
+              <span>{isAutoPlay ? "4K Automatic Space Flight • Press Space or ⏸ to pause" : "⏸ TOUR PAUSED — Freely drag mouse/touch to rotate & explore 3D scene"}</span>
             </div>
           </div>
 
