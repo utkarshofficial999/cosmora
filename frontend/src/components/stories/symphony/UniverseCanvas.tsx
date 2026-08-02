@@ -177,7 +177,7 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
     act2Group.add(new THREE.Mesh(sagAGeo, sagAMat));
 
     // ════════════════════════════════════════════════════════════════
-    // ACT III: STARDUST AND FIRE — REAL 4K NASA SATELLITE SOLAR SYSTEM
+    // ACT III: STARDUST AND FIRE — COMPLETE 4K ORBITAL SOLAR SYSTEM
     // ════════════════════════════════════════════════════════════════
     const act3Group = new THREE.Group();
     act3Group.position.set(0, 0, -100);
@@ -186,65 +186,88 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
     // Photorealistic 4K Sun Core with Real Solar Satellite Map
     const sunMap = textureLoader.load("/textures/planets/sun.jpg");
     sunMap.colorSpace = THREE.SRGBColorSpace;
-    const sunGeo = new THREE.SphereGeometry(2.0, 64, 64);
+    const sunGeo = new THREE.SphereGeometry(2.2, 64, 64);
     const sunMat = new THREE.MeshBasicMaterial({ map: sunMap });
     const sunMesh = new THREE.Mesh(sunGeo, sunMat);
     act3Group.add(sunMesh);
 
     // Multi-Layered Solar Corona Flare Halos
     const sunCoronaInner = new THREE.Mesh(
-      new THREE.SphereGeometry(2.15, 64, 64),
+      new THREE.SphereGeometry(2.35, 64, 64),
       new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5, side: THREE.BackSide, blending: THREE.AdditiveBlending })
     );
     act3Group.add(sunCoronaInner);
 
     const sunCoronaOuter = new THREE.Mesh(
-      new THREE.SphereGeometry(2.4, 64, 64),
+      new THREE.SphereGeometry(2.6, 64, 64),
       new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.35, side: THREE.BackSide, blending: THREE.AdditiveBlending })
     );
     act3Group.add(sunCoronaOuter);
 
-    // Protoplanetary Accretion Dust Disk
-    const accCount = 4000;
-    const accPos = new Float32Array(accCount * 3);
-    for (let i = 0; i < accCount; i++) {
-      const r = 2.8 + Math.random() * 11.5;
+    // Protoplanetary Accretion Dust Disk & Asteroid Belt
+    const astCount = 2000;
+    const astPos = new Float32Array(astCount * 3);
+    for (let i = 0; i < astCount; i++) {
+      const isMainBelt = Math.random() > 0.3;
+      const r = isMainBelt ? 7.6 + Math.random() * 1.4 : 3.0 + Math.random() * 12.0;
       const th = Math.random() * Math.PI * 2;
-      accPos[i * 3] = Math.cos(th) * r;
-      accPos[i * 3 + 1] = (Math.random() - 0.5) * 0.25;
-      accPos[i * 3 + 2] = Math.sin(th) * r;
+      astPos[i * 3] = Math.cos(th) * r;
+      astPos[i * 3 + 1] = (Math.random() - 0.5) * (isMainBelt ? 0.15 : 0.3);
+      astPos[i * 3 + 2] = Math.sin(th) * r;
     }
-    const accGeo = new THREE.BufferGeometry();
-    accGeo.setAttribute("position", new THREE.BufferAttribute(accPos, 3));
-    const accMat = new THREE.PointsMaterial({ size: 0.09, color: 0xff8833, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
-    const accPoints = new THREE.Points(accGeo, accMat);
-    act3Group.add(accPoints);
+    const astGeo = new THREE.BufferGeometry();
+    astGeo.setAttribute("position", new THREE.BufferAttribute(astPos, 3));
+    const astMat = new THREE.PointsMaterial({ size: 0.08, color: 0xe2e8f0, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending });
+    const astPoints = new THREE.Points(astGeo, astMat);
+    act3Group.add(astPoints);
 
-    // Real NASA Satellite Textured Planets
+    // Real NASA Satellite Textured Planets & Concentric Orbital Rings
     const planetConfigs = [
-      { name: "Mercury", r: 3.4, size: 0.22, tex: "/textures/planets/mercury_2048.jpg", roughness: 0.9 },
-      { name: "Venus", r: 4.6, size: 0.34, tex: "/textures/planets/venus_2048.jpg", roughness: 0.7 },
-      { name: "Earth", r: 6.0, size: 0.38, tex: "/textures/planets/earth_blue_marble.jpg", roughness: 0.35 },
-      { name: "Mars", r: 7.4, size: 0.28, tex: "/textures/planets/mars_2048.jpg", roughness: 0.88 },
-      { name: "Jupiter", r: 9.2, size: 0.75, tex: "/textures/planets/jupiter_2048.jpg", roughness: 0.6 },
-      { name: "Saturn", r: 11.4, size: 0.65, tex: "/textures/planets/jupiter_2048.jpg", roughness: 0.6, isSaturn: true },
-      { name: "Neptune", r: 13.5, size: 0.52, tex: "/textures/planets/neptune_2048.jpg", roughness: 0.55 },
+      { name: "Mercury", r: 3.4, size: 0.22, tex: "/textures/planets/mercury_2048.jpg", roughness: 0.9, orbColor: 0x94a3b8 },
+      { name: "Venus", r: 4.6, size: 0.34, tex: "/textures/planets/venus_2048.jpg", roughness: 0.7, orbColor: 0xfde047 },
+      { name: "Earth", r: 6.0, size: 0.38, tex: "/textures/planets/earth_blue_marble.jpg", roughness: 0.35, orbColor: 0x38bdf8, isEarth: true },
+      { name: "Mars", r: 7.4, size: 0.28, tex: "/textures/planets/mars_2048.jpg", roughness: 0.88, orbColor: 0xef4444 },
+      { name: "Jupiter", r: 9.6, size: 0.75, tex: "/textures/planets/jupiter_2048.jpg", roughness: 0.6, orbColor: 0xf97316 },
+      { name: "Saturn", r: 11.8, size: 0.65, tex: "/textures/planets/jupiter_2048.jpg", roughness: 0.6, orbColor: 0xeab308, isSaturn: true },
+      { name: "Uranus", r: 13.8, size: 0.54, tex: "/textures/planets/neptune_2048.jpg", roughness: 0.5, orbColor: 0x22d3ee },
+      { name: "Neptune", r: 15.6, size: 0.52, tex: "/textures/planets/neptune_2048.jpg", roughness: 0.55, orbColor: 0x3b82f6 },
     ];
 
     const planetMeshes: THREE.Mesh[] = [];
     planetConfigs.forEach((pc, idx) => {
+      // Concentric Orbit Line
+      const orbitPts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 128; i++) {
+        const a = (i / 128) * Math.PI * 2;
+        orbitPts.push(new THREE.Vector3(Math.cos(a) * pc.r, 0, Math.sin(a) * pc.r));
+      }
+      const orbitGeo = new THREE.BufferGeometry().setFromPoints(orbitPts);
+      const orbitLine = new THREE.Line(
+        orbitGeo,
+        new THREE.LineBasicMaterial({ color: pc.orbColor, transparent: true, opacity: 0.25 })
+      );
+      act3Group.add(orbitLine);
+
+      // Planet Mesh
       const pTex = textureLoader.load(pc.tex);
       pTex.colorSpace = THREE.SRGBColorSpace;
       const pMat = new THREE.MeshStandardMaterial({ map: pTex, roughness: pc.roughness });
       const pMesh = new THREE.Mesh(new THREE.SphereGeometry(pc.size, 32, 32), pMat);
 
       if (pc.isSaturn) {
-        // Saturn 3D Rings
-        const ringGeo = new THREE.RingGeometry(pc.size * 1.3, pc.size * 2.4, 64);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0xfde047, side: THREE.DoubleSide, transparent: true, opacity: 0.75 });
+        // Saturn 3D Ring System
+        const ringGeo = new THREE.RingGeometry(pc.size * 1.35, pc.size * 2.5, 64);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xfde047, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
         const ringMesh = new THREE.Mesh(ringGeo, ringMat);
         ringMesh.rotation.x = Math.PI / 2.2;
         pMesh.add(ringMesh);
+      }
+
+      if (pc.isEarth) {
+        // Earth Atmosphere Shell
+        const atmoGeo = new THREE.SphereGeometry(pc.size * 1.05, 32, 32);
+        const atmoMat = new THREE.MeshBasicMaterial({ color: 0x00d5ff, transparent: true, opacity: 0.2, side: THREE.BackSide, blending: THREE.AdditiveBlending });
+        pMesh.add(new THREE.Mesh(atmoGeo, atmoMat));
       }
 
       const angle = (idx * Math.PI * 2) / planetConfigs.length;
@@ -428,7 +451,7 @@ export function UniverseCanvas({ activeAct, className = "" }: UniverseCanvasProp
       act3Group.rotation.x = dragRotX;
       act3Group.rotation.y = dragRotY;
       sunCoronaInner.scale.setScalar(1 + Math.sin(time * 3) * 0.04);
-      accPoints.rotation.y += delta * 0.2;
+      astPoints.rotation.y += delta * 0.2;
       planetMeshes.forEach((pm, idx) => {
         const pc = planetConfigs[idx];
         const angle = (idx * Math.PI * 2) / planetConfigs.length + time * (0.3 / (idx + 1));
